@@ -16,7 +16,8 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     entry_points={
         'console_scripts':
-            ['pnc = pyncli.nc:main']
+            ['pnc = pyncli.nc:main',
+             'pnc_test =  pyncli.test.runall:main']
         },
     install_requires=[
         'ldap3>=2.5.1',
