@@ -16,6 +16,8 @@ from importlib import reload
 reload(sys)
 import re
 
+def expand_mod_name(pack, module):
+    return '{0}.{1}'.format(pack, module)
 
 def main():
     tst=re.compile(r"^[a-z0-9._-]+_test.py$", re.IGNORECASE)
@@ -32,13 +34,18 @@ def main():
     for t in testmodules:
         try:
             # If the module defines a suite() function, call it to get the suite.
-            mod = __import__(t, globals(), locals(), ['suite'])
+            mod = __import__(expand_mod_name('pyncli.test',t), globals(),
+                locals(), ['suite'])
             suitefn = getattr(mod, 'suite')
             suite.addTest(suitefn())
         except (ImportError, AttributeError):
             # else, just load all the test cases from the module.
-            suite.addTest(unittest.defaultTestLoader.loadTestsFromName(t))
+            suite.addTest(unittest.defaultTestLoader.loadTestsFromName(
+                expand_mod_name('pyncli.test',t))
+            )
 
     unittest.TextTestRunner().run(suite)
+
+
 if __name__ == '__main__':
     main()

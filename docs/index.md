@@ -7,7 +7,7 @@ Main goal of this project is to create command line interface to work with NextC
 
 
 ```
-pip3 install https://github.com/edelwi/pyncli/tree/master/dist/pyncli-0.1a0.devXX-py3-none-any.whl
+pip3 install pyncli-0.1a0.dev19-py3-none-any.whl
 ```
 
 ## Configurration
@@ -215,7 +215,7 @@ If you use ldap backend to NextCloud, it may be useful.
 
 ## Authors
 
-* **Evgeniy Semenov** - *Initial work* - [edelwi](https://github.com/edelwi/)
+* **Evgeniy Semenov** - *Initial work*
 
 
 ## License

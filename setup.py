@@ -8,16 +8,17 @@ setuptools.setup(
     name="pyncli",
     version=pyncli_version,
     author="Evgeniy Semenov",
-    author_email="all_post@mail.ru",
+    author_email="edelwi@yandex.ru",
     description="Command Line Interface for NextCloud GroupFolder app",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://bitbucket.org/all_post/pyncli",
+    url="https://github.com/edelwi/pyncli",
     packages=setuptools.find_packages(),
     entry_points={
         'console_scripts':
             ['pnc = pyncli.nc:main',
-             'pnc_test =  pyncli.test.runall:main']
+             'pnc_test =  pyncli.test.runall:main',
+            ]
         },
     install_requires=[
         'ldap3>=2.5.1',
