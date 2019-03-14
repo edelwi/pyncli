@@ -4,10 +4,19 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
+  - "3.7"
   # PyPy versions
   - "pypy3.5"
 # command to install dependencies
 install:
   - pip install -r requirements.txt
+  - pip install codecov
   - python setup.py -q install
-script: pnc_test   
+  
+#script: pnc_test
+
+script:
+  - coverage run -m pyncli.test.runall
+
+after_success:
+  - codecov --token="ac0c9ad5-9d15-4136-a311-849cdc78f802"

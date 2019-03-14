@@ -1,5 +1,7 @@
 # pyncli - Python NextCloud Command Line Interface
 
+[![Build Status](https://travis-ci.org/edelwi/pyncli.svg?branch=master)](https://travis-ci.org/edelwi/pyncli) [![Documentation Status](https://readthedocs.org/projects/pyncli/badge/?version=latest)](https://pyncli.readthedocs.io/en/latest/?badge=latest) (https://codecov.io/gh/edelwi/pyncli/branch/master/graph/badge.svg)
+
 Main goal of this project is to create command line interface to work with NextCloud Group Folders.
 
 
@@ -212,6 +214,11 @@ print(cloud.get_group_folder(1))
 
 ### ldap API (litle wrapper around fine [ldap3](https://pypi.org/project/ldap3/) library)
 If you use ldap backend to NextCloud, it may be useful.
+
+
+##Documentation
+
+Documentation is available at [readthedocs] (https://pyncli.readthedocs.io)
 
 ## Authors
 
