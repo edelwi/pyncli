@@ -1,7 +1,6 @@
 # pyncli - Python NextCloud Command Line Interface
 
 [![Build Status](https://travis-ci.org/edelwi/pyncli.svg?branch=master)](https://travis-ci.org/edelwi/pyncli) [![Documentation Status](https://readthedocs.org/projects/pyncli/badge/?version=latest)](https://pyncli.readthedocs.io/en/latest/?badge=latest) [![Coverage Status][coverage-image]][coverage-url]
-[![Code Coverage Status]](https://codecov.io/gh/edelwi/pyncli/branch/master/graph/badge.svg)
 
 Main goal of this project is to create command line interface to work with NextCloud Group Folders.
 
@@ -229,6 +228,10 @@ Documentation is available at - [readthedocs] (https://pyncli.readthedocs.io/)
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
+
+## Copyright
+
+Copyright © 2019. Evgeniy Semenov.
 
 [coverage-image]: https://codecov.io/gh/edelwi/pyncli/branch/master/graph/badge.svg
 [coverage-url]: https://codecov.io/gh/edelwi/pyncli
