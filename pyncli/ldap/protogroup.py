@@ -14,15 +14,15 @@ import sys
 
 from pyncli.ldap.admexept import NotEnoughParams, EmptyParam, WrongParam, TooLong
 
-class CleanSetAttrMeta(type):
-    """Metaclass to change setattr method
-    """
-    def __call__(cls, *args, **kwargs):
-        real_setattr = cls.__setattr__
-        cls.__setattr__ = object.__setattr__
-        self = super(CleanSetAttrMeta, cls).__call__(*args, **kwargs)
-        cls.__setattr__ = real_setattr
-        return self
+##class CleanSetAttrMeta(type):
+##    """Metaclass to change setattr method
+##    """
+##    def __call__(cls, *args, **kwargs):
+##        real_setattr = cls.__setattr__
+##        cls.__setattr__ = object.__setattr__
+##        self = super(CleanSetAttrMeta, cls).__call__(*args, **kwargs)
+##        cls.__setattr__ = real_setattr
+##        return self
 
 class protogroup(object):
     """

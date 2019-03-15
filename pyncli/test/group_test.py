@@ -40,6 +40,14 @@ class TestGropMetods(unittest.TestCase):
     def test___init_6(self):
         self.assertRaises(TooLong,group,u'ю'*5,u'й'*1025)
 
+##    @unittest.expectedFailure # does unittest change setattr?
+##    def test_setattr_1(self):
+##        grp=group(u'some_group',org_unit=u'ou=some_ou,dc=example,dc=com',description=u'Группа тестов')
+##        grp.name='New group'
+##        self.assertEqual(grp.name, u'New group')
+##        self.assertEqual(grp.org_unit,u'ou=some_ou,dc=example,dc=com')
+##        self.assertEqual(grp.dn,u'CN=New group,ou=some_ou,dc=example,dc=com')
+
 
 class TestGropMetods2(unittest.TestCase):
 
@@ -77,6 +85,8 @@ class TestGropMetods2(unittest.TestCase):
         cr=u"CREATE TABLE 'test'( 'description' TEXT, 'dn' TEXT, 'name' TEXT PRIMARY KEY, 'org_unit' TEXT);"
         self.assertEqual(self.group.get_sql_create_table('test'),cr)
 
+    def test_brief_1(self):
+        self.assertEqual(self.group.brief,u"name: some_group (Группа тестов)")
 
 if __name__ == '__main__':
     unittest.main()

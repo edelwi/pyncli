@@ -306,6 +306,11 @@ class TestUacMetods(unittest.TestCase):
     def test___add_21(self):
         self.assertEqual(uac.TEMP_DUPLICATE_ACCOUNT + uac.TRUSTED_TO_AUTH_FOR_DELEGATION,0x0100+0x1000000)
 
+    def test___add_22(self):
+        self.assertEqual(uac.SMARTCARD_REQUIRED + uac.SMARTCARD_REQUIRED,0x40000)
+
+    def test___add_23(self):
+        self.assertEqual(uac.ACCOUNTDISABLE + uac.ACCOUNTDISABLE,0x0002)
 
     def test___add2_1(self):
         self.assertNotEqual(uac.TRUSTED_FOR_DELEGATION + uac.INTERDOMAIN_TRUST_ACCOUNT + uac.INTERDOMAIN_TRUST_ACCOUNT,0x80000+0x0800+0x0800)
@@ -971,6 +976,9 @@ class TestUacMetods(unittest.TestCase):
 
     def test___control_not_21(self):
         self.assertNotEqual(uac.get_control([uac.SCRIPT, uac.DONT_REQ_PREAUTH, uac.WORKSTATION_TRUST_ACCOUNT, uac.TRUSTED_FOR_DELEGATION, uac.HOMEDIR_REQUIRED, uac.MNS_LOGON_ACCOUNT, ]),hex(0x0002+0x400000+0x0100+0x80000+0x0008+0x20000))
+
+    def test___control_not_22(self):
+        self.assertFalse(uac.get_control('some str'))
 
 if __name__ == '__main__':
     unittest.main()

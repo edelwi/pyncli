@@ -12,11 +12,21 @@
 
 import sys
 
-from .admexept import NotEnoughParams, EmptyParam, WrongParam, TooLong
+from pyncli.ldap.admexept import NotEnoughParams, EmptyParam, WrongParam, TooLong
 
-from . import protogroup
+from pyncli.ldap import protogroup
 
-class group(protogroup.protogroup, metaclass=protogroup.CleanSetAttrMeta):
+class CleanSetAttrMeta(type):
+    """Metaclass to change setattr method
+    """
+    def __call__(cls, *args, **kwargs):
+        real_setattr = cls.__setattr__
+        cls.__setattr__ = object.__setattr__
+        self = super(CleanSetAttrMeta, cls).__call__(*args, **kwargs)
+        cls.__setattr__ = real_setattr
+        return self
+
+class group(protogroup.protogroup, metaclass=CleanSetAttrMeta):
     """
         common group class
     """
@@ -71,12 +81,15 @@ class group(protogroup.protogroup, metaclass=protogroup.CleanSetAttrMeta):
 
     def __setattr__(self, name, value):
         # без super не работают property
-        super(protogroup.protogroup, self).__setattr__(name, value)
+        super(group, self).__setattr__(name, value)
         if name=='org_unit':
-            super(protogroup.protogroup,self).__setattr__( name, self.check_length( name, value) )
-            super(protogroup.protogroup,self).__setattr__( 'dn', self.check_length( 'dn', self.get_dn() ) )
+            super(group,self).__setattr__( name, self.check_length( name, value) )
+            super(group,self).__setattr__( 'dn', self.check_length( 'dn', self.get_dn() ) )
+        if name=='name':
+            super(group,self).__setattr__( name, self.check_length( name, value+'1') )
+            super(group,self).__setattr__( 'dn', self.check_length( 'dn', self.get_dn() ) )
         else:
-            super(protogroup.protogroup,self).__setattr__( name, self.check_length( name, value) )
+            super(group,self).__setattr__( name, self.check_length( name, value) )
 
     @classmethod
     def get_sql_create_table(cls,table_name):
@@ -145,7 +158,7 @@ class group(protogroup.protogroup, metaclass=protogroup.CleanSetAttrMeta):
         Returns:
             (str): brief group information
         """
-        return "name :{name} ({description})".format(
+        return "name: {name} ({description})".format(
                 name=self.name,
                 description=self.description)
 
