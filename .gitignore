@@ -1,3 +1,4 @@
 /pyncli/__pycache__/*.pyc
 *.log
 *.pyc
+/pyncli/test/.coverage

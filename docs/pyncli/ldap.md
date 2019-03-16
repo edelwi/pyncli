@@ -114,13 +114,6 @@ Class for administrative operations
 <h2 id="pyncli.ldap.protogroup">pyncli.ldap.protogroup</h2>
 
 
-<h3 id="pyncli.ldap.protogroup.CleanSetAttrMeta">CleanSetAttrMeta</h3>
-
-```python
-CleanSetAttrMeta(self, /, *args, **kwargs)
-```
-Metaclass to change setattr method
-
 <h3 id="pyncli.ldap.protogroup.protogroup">protogroup</h3>
 
 ```python
@@ -131,6 +124,13 @@ base group class
 
 <h2 id="pyncli.ldap.group">pyncli.ldap.group</h2>
 
+
+<h3 id="pyncli.ldap.group.CleanSetAttrMeta">CleanSetAttrMeta</h3>
+
+```python
+CleanSetAttrMeta(self, /, *args, **kwargs)
+```
+Metaclass to change setattr method
 
 <h3 id="pyncli.ldap.group.group">group</h3>
 

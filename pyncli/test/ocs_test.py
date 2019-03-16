@@ -12,6 +12,7 @@
 
 import unittest
 import os
+from datetime import datetime
 
 pd=os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) )
 os.sys.path.insert(0,pd)
@@ -179,6 +180,56 @@ class TestGroupFolder(unittest.TestCase):
         self.assertEqual( str(self.gf), '''<GroupFolder> (10) "share" quota: -3, size: 52.02m
   IT
   Admins''')
+
+
+class TestUser(unittest.TestCase):
+    def setUp(self):
+        self.grp_1 = ocs.Group('IT')
+        self.grp_2 = ocs.Group('tester')
+        self.user=ocs.User(id='user', enabled=True,
+            storageLocation='/home/nextcloud/user@example.com',
+            lastLogin=1544530113000,
+            backend='LDAP', subadmin=[], quota=None, email='user@example.com',
+            displayname='Pupkin Vasiliy', phone='+79010010101',
+            address='Russia, Sochi', website='https://www.leningrad.spb.ru',
+            twitter='@new_account', groups=[self.grp_1, self.grp_2],
+            language='ru', locale='ru', backendCapabilities=None)
+
+    def tearDown(self):
+        self.gf=None
+
+    def test___init__0(self):
+        self.assertEqual( self.user.id, 'user')
+        self.assertEqual( self.user.enabled, True)
+        self.assertEqual( self.user.storage_location,
+            '/home/nextcloud/user@example.com')
+        self.assertEqual( self.user.last_login,
+            datetime(2018, 12, 11, 15, 8, 33))
+        self.assertEqual( self.user.backend, 'LDAP')
+        self.assertListEqual( self.user.subadmin, [])
+
+        #self.assertEqual( self.user.quota, ocs.UserQuota(-3))  #!
+        self.assertIsNone( self.user.quota)
+        self.assertEqual( self.user.email, 'user@example.com')
+        self.assertEqual( self.user.displayname, 'Pupkin Vasiliy')
+        self.assertEqual( self.user.website, 'https://www.leningrad.spb.ru')
+        self.assertEqual( self.user.twitter, '@new_account')
+        self.assertListEqual( self.user.groups,
+            [self.grp_1, self.grp_2])
+        self.assertEqual( self.user.language, 'ru')
+        self.assertEqual( self.user.locale, 'ru')
+        self.assertIsNone( self.user.backend_capabilities)
+
+
+    def test___str__0(self):
+        self.assertEqual( str(self.user), '''<User> (user) "Pupkin Vasiliy" enabled: True, e-mail: user@example.com
+	backend: LDAP, storage location: /home/nextcloud/user@example.com, last logon: 2018-12-11T15:08:33
+	quota: None	phone: +79010010101, twitter: @new_account, website: https://www.leningrad.spb.ru
+	address: Russia, Sochi
+	language: ru, locale: ru
+	<Group> "IT"
+	<Group> "tester"
+	None''')
 
 if __name__ == '__main__':
     unittest.main()

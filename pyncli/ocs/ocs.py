@@ -173,25 +173,30 @@ class User(object):
         phone='', address='', website='', twitter='', groups=[],
         language='ru', locale='ru', backendCapabilities=None):
 
-        self.id = id                                  ##
-        self.enabled = bool(enabled)                  ##
-        self.storage_location = storageLocation       ##
+        self.id = id
+        self.enabled = bool(enabled)
+        self.storage_location = storageLocation
         if lastLogin=='0':
-            self.last_login = datetime(1970, 1, 1, 0, 0)      ##
+            self.last_login = datetime(1970, 1, 1, 0, 0)
         else:
+            # TODO: add try
             self.last_login = datetime.fromtimestamp(int(lastLogin)/1e3)
-        self.backend = backend                        ##
-        self.subadmin = subadmin                      ##
-        self.quota = quota                            ##
-        self.email = email                            ##
-        self.displayname = displayname                ##
-        self.phone = phone                            ##
-        self.address = address                        ##
-        self.website = website                        ##
-        self.twitter = twitter                        ##
-        self.groups =  groups #!                      ##
-        self.language = language                      ##
-        self.locale = locale                          ##
+        self.backend = backend
+        # TODO: add check
+        self.subadmin = subadmin
+        # TODO: add check
+        self.quota = quota
+        self.email = email
+        self.displayname = displayname
+        self.phone = phone
+        self.address = address
+        self.website = website
+        self.twitter = twitter
+        # TODO: add check
+        self.groups =  groups #!
+        self.language = language
+        self.locale = locale
+        # TODO: add check
         self.backend_capabilities = backendCapabilities #!
 
     def __str__(self):
