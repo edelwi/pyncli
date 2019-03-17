@@ -20,6 +20,7 @@ import nc
 from ocs.ocs import (PERMISSION_CREATE, PERMISSION_READ, PERMISSION_UPDATE,
                 PERMISSION_DELETE, PERMISSION_SHARE, PERMISSION_ALL)
 from pyncli.ocs import ocs
+from pyncli.ldap.admexept import AdminException, OperationFailure, WrongParam
 
 class TestFuncs(unittest.TestCase):
 
@@ -188,7 +189,7 @@ class TestUser(unittest.TestCase):
         self.grp_2 = ocs.Group('tester')
         self.user=ocs.User(id='user', enabled=True,
             storageLocation='/home/nextcloud/user@example.com',
-            lastLogin=1544530113000,
+            lastLogin='1544530113000',
             backend='LDAP', subadmin=[], quota=None, email='user@example.com',
             displayname='Pupkin Vasiliy', phone='+79010010101',
             address='Russia, Sochi', website='https://www.leningrad.spb.ru',
@@ -196,7 +197,9 @@ class TestUser(unittest.TestCase):
             language='ru', locale='ru', backendCapabilities=None)
 
     def tearDown(self):
-        self.gf=None
+        self.user=None
+        self.grp_1=None
+        self.grp_2=None
 
     def test___init__0(self):
         self.assertEqual( self.user.id, 'user')
@@ -230,6 +233,178 @@ class TestUser(unittest.TestCase):
 	<Group> "IT"
 	<Group> "tester"
 	None''')
+
+class TestUser2(unittest.TestCase):
+    def setUp(self):
+        self.grp_1 = ocs.Group('HR')
+        self.grp_2 = ocs.Group('staff')
+        self.quota_1 = ocs.UserQuota(quota=10737418240,used=2431492563,
+                free=8305925677, total=10737418240, relative=22.65)
+        self.bc = ocs.BackendCapabilities(setDisplayName=1, setPassword=1)
+        self.user=ocs.User(id='alex', enabled=1,
+            storageLocation='/home/nextcloud/alex@example.com',
+            lastLogin=0,
+            backend='Database', subadmin=[self.grp_1], quota=self.quota_1,
+            email='alex_hr@example.com',
+            displayname='Ivanov Alex', phone='+79010010102',
+            address='Russia, Surgut', website='https://www.example.ru',
+            twitter='@alex_hr', groups=[self.grp_1, self.grp_2],
+            language='en', locale='en',
+            backendCapabilities=self.bc
+            )
+
+    def tearDown(self):
+        self.user=None
+        self.grp_1=None
+        self.grp_2=None
+        self.quota_1=None
+        self.bc
+
+    def test___init__0(self):
+
+        self.assertEqual( self.user.id, 'alex')
+        self.assertEqual( self.user.enabled, True)
+        self.assertEqual( self.user.storage_location,
+            '/home/nextcloud/alex@example.com')
+        self.assertEqual( self.user.last_login,
+            datetime(1970, 1, 1, 0, 0))
+        self.assertEqual( self.user.backend, 'Database')
+        self.assertListEqual( self.user.subadmin, [self.grp_1])
+
+        self.assertEqual( self.user.quota, self.quota_1)
+        self.assertEqual( self.user.email, 'alex_hr@example.com')
+        self.assertEqual( self.user.displayname, 'Ivanov Alex')
+        self.assertEqual( self.user.website, 'https://www.example.ru')
+        self.assertEqual( self.user.twitter, '@alex_hr')
+        self.assertListEqual( self.user.groups,
+            [self.grp_1, self.grp_2])
+        self.assertEqual( self.user.language, 'en')
+        self.assertEqual( self.user.locale, 'en')
+        self.assertEqual( self.user.backend_capabilities, self.bc)
+
+    def test___str__0(self):
+        self.assertEqual( str(self.user), '''<User> (alex) "Ivanov Alex" enabled: True, e-mail: alex_hr@example.com
+	backend: Database, storage location: /home/nextcloud/alex@example.com, last logon: 1970-01-01T00:00:00
+	quota: Quota: 10.00g, used: 2.26g, free: 7.74g, total: 10.00g, relative: 22.65
+	phone: +79010010102, twitter: @alex_hr, website: https://www.example.ru
+	address: Russia, Surgut
+	language: en, locale: en
+	<Group> "HR"
+	<Group> "staff"
+	<BackendCapabilities> setDisplayName: True,  setPassword: True''')
+
+class TestUserQuota(unittest.TestCase):
+    def setUp(self):
+        self.quota = ocs.UserQuota(quota=10737418240,used=2431492563,
+                free=8305925677, total=10737418240, relative=22.65)
+
+    def tearDown(self):
+        self.quota=None
+
+    def test___init__0(self):
+        self.assertEqual( self.quota.quota, 10737418240)
+        self.assertEqual( self.quota.used, 2431492563)
+        self.assertEqual( self.quota.free, 8305925677)
+        self.assertEqual( self.quota.total, 10737418240)
+        self.assertEqual( self.quota.relative, 22.65)
+
+    def test___str__0(self):
+        self.assertEqual( str(self.quota), '''Quota: 10.00g, used: 2.26g, free: 7.74g, total: 10.00g, relative: 22.65\n''')
+
+class TestUserQuota2(unittest.TestCase):
+    def setUp(self):
+        self.quota = ocs.UserQuota(quota=5368709120,used=0,
+                free=5368709120, total=5368709120, relative=0)
+
+    def tearDown(self):
+        self.quota=None
+
+    def test___init__0(self):
+        self.assertEqual( self.quota.quota, 5368709120)
+        self.assertEqual( self.quota.used, 0)
+        self.assertEqual( self.quota.free, 5368709120)
+        self.assertEqual( self.quota.total, 5368709120)
+        self.assertEqual( self.quota.relative, 0)
+
+    def test___str__0(self):
+        self.assertEqual( str(self.quota), '''Quota: 5.00g, used: 0, free: 5.00g, total: 5.00g\n''')
+
+class TestBackendCapabilities(unittest.TestCase):
+    def setUp(self):
+        self.bc = ocs.BackendCapabilities(setDisplayName=1, setPassword=1)
+
+    def tearDown(self):
+        self.bc=None
+
+    def test___init__0(self):
+        self.assertTrue( self.bc.set_display_name)
+        self.assertTrue( self.bc.set_password)
+
+    def test___str__0(self):
+        self.assertEqual( str(self.bc), '''<BackendCapabilities> setDisplayName: True,  setPassword: True''')
+
+class TestBackendCapabilities2(unittest.TestCase):
+    def setUp(self):
+        self.bc = ocs.BackendCapabilities()
+
+    def tearDown(self):
+        self.bc=None
+
+    def test___init__0(self):
+        self.assertFalse( self.bc.set_display_name)
+        self.assertFalse( self.bc.set_password)
+
+    def test___str__0(self):
+        self.assertEqual( str(self.bc), '''<BackendCapabilities> setDisplayName: False,  setPassword: False''')
+
+class TestOcs_xml(unittest.TestCase):
+    def setUp(self):
+        self.resp = '''<ocs>
+ <meta>
+  <status>ok</status>
+  <statuscode>100</statuscode>
+  <message>OK</message>
+  <totalitems></totalitems>
+  <itemsperpage></itemsperpage>
+ </meta>
+ <data/>
+</ocs>
+'''
+        self.resp2= '''<ocs>
+ <meta>
+  <status>failure</status>
+  <statuscode>997</statuscode>
+  <message>Current user is not logged in</message>
+  <totalitems></totalitems>
+  <itemsperpage></itemsperpage>
+ </meta>
+ <data/>
+</ocs>
+'''
+    def tearDown(self):
+        self.resp=None
+        self.resp2=None
+
+    def test__init__0(self):
+        self.assertRaises(WrongParam,ocs.Ocs_xml,self.resp,data_class_name='WrongClassName')
+
+    def test__init__1(self):
+        self.assertRaises(WrongParam,ocs.Ocs_xml,"",data_class_name='')
+
+    def test__init__2(self):
+        self.assertRaises(WrongParam,ocs.Ocs_xml,555,data_class_name='')
+
+    def test__init__3(self):
+        rsp=ocs.Ocs_xml(self.resp,data_class_name='')
+        self.assertEqual(rsp.status,'ok')
+        self.assertEqual(rsp.statuscode,'100')
+        self.assertEqual(rsp.message,'OK')
+
+    def test__init__4(self):
+        rsp=ocs.Ocs_xml(self.resp2,data_class_name='')
+        self.assertEqual(rsp.status,'failure')
+        self.assertEqual(rsp.statuscode,'997')
+        self.assertEqual(rsp.message,'Current user is not logged in')
 
 if __name__ == '__main__':
     unittest.main()

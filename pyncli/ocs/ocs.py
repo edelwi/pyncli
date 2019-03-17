@@ -16,6 +16,7 @@ from urllib.parse import urljoin, urlparse
 from pyncli.ldap.admexept import AdminException, OperationFailure, WrongParam
 
 import xml.etree.ElementTree as ET
+from xml.etree.ElementTree import ParseError
 from pyncli.config import Config
 import logging
 from logging.handlers import RotatingFileHandler
@@ -176,7 +177,7 @@ class User(object):
         self.id = id
         self.enabled = bool(enabled)
         self.storage_location = storageLocation
-        if lastLogin=='0':
+        if lastLogin=='0' or lastLogin==0:
             self.last_login = datetime(1970, 1, 1, 0, 0)
         else:
             # TODO: add try
@@ -270,9 +271,22 @@ class Ocs_xml(object):
     """
         NextCloud answer parser class.
     """
+    _SUPPORTED_CLASS_NAMES=['','GroupFolder','Group','CreateGroupFolder',
+        'GroupMembers','User','Apps','Subadmins']
 
     def __init__(self,xml_text,data_class_name=''):
-        self.respose=ET.fromstring(xml_text)
+
+        if data_class_name not in self._SUPPORTED_CLASS_NAMES:
+            raise WrongParam("Unsupported class name: {cls}".format(
+                cls=data_class_name))
+        if not isinstance(xml_text,str):
+            raise WrongParam("Invalid xml_text parameter type: {t}".format(
+                t=type(xml_text)))
+        try:
+            self.respose=ET.fromstring(xml_text)
+        except ParseError as e:
+            raise WrongParam("Invalid xml_text parameter value: {e}".format(
+                e=e))
         self.status=self.respose.find(".//meta/status").text \
             if self.respose.find(".//meta/status") is not None else 'unknown'
         self.statuscode=self.respose.find(".//meta/statuscode").text \
