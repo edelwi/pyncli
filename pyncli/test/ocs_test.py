@@ -21,6 +21,7 @@ from ocs.ocs import (PERMISSION_CREATE, PERMISSION_READ, PERMISSION_UPDATE,
                 PERMISSION_DELETE, PERMISSION_SHARE, PERMISSION_ALL)
 from pyncli.ocs import ocs
 from pyncli.ldap.admexept import AdminException, OperationFailure, WrongParam
+from copy import deepcopy
 
 class TestFuncs(unittest.TestCase):
 
@@ -163,6 +164,18 @@ class TestGroup(unittest.TestCase):
     def test___info__0(self):
         self.assertEqual( self.g.info, '<Group> "50"')
 
+    def test__eq__0(self):
+        self.assertEqual(self.g, ocs.Group(group_id=50,permissions=PERMISSION_ALL))
+
+    def test__ne__0(self):
+        self.assertNotEqual(self.g, ocs.Group(group_id=51,permissions=PERMISSION_ALL))
+
+    def test__ne__1(self):
+        self.assertNotEqual(self.g, ocs.Group(group_id=50,permissions=PERMISSION_READ))
+
+    def test__ne__2(self):
+        self.assertNotEqual(self.g, 'q')
+
 class TestGroupFolder(unittest.TestCase):
     def setUp(self):
         self.gf=ocs.GroupFolder(id=10,mount_point='share',groups=['IT','Admins'], quota=-3, size=54546540)
@@ -244,7 +257,7 @@ class TestUser2(unittest.TestCase):
         self.user=ocs.User(id='alex', enabled=1,
             storageLocation='/home/nextcloud/alex@example.com',
             lastLogin=0,
-            backend='Database', subadmin=[self.grp_1], quota=self.quota_1,
+            backend='Database', subadmin=[], quota=self.quota_1,
             email='alex_hr@example.com',
             displayname='Ivanov Alex', phone='+79010010102',
             address='Russia, Surgut', website='https://www.example.ru',
@@ -269,7 +282,7 @@ class TestUser2(unittest.TestCase):
         self.assertEqual( self.user.last_login,
             datetime(1970, 1, 1, 0, 0))
         self.assertEqual( self.user.backend, 'Database')
-        self.assertListEqual( self.user.subadmin, [self.grp_1])
+        self.assertListEqual( self.user.subadmin, [])
 
         self.assertEqual( self.user.quota, self.quota_1)
         self.assertEqual( self.user.email, 'alex_hr@example.com')
@@ -292,6 +305,66 @@ class TestUser2(unittest.TestCase):
 	<Group> "HR"
 	<Group> "staff"
 	<BackendCapabilities> setDisplayName: True,  setPassword: True''')
+
+class TestUser3(unittest.TestCase):
+    def setUp(self):
+        self.grp_1 = ocs.Group('HR')
+        self.grp_2 = ocs.Group('staff')
+        self.quota_1 = ocs.UserQuota(quota=10737418240,used=2431492563,
+                free=8305925677, total=10737418240, relative=22.65)
+        self.bc = ocs.BackendCapabilities(setDisplayName=1, setPassword=1)
+        self.user=ocs.User(id='alex', enabled=1,
+            storageLocation='/home/nextcloud/alex@example.com',
+            lastLogin=0,
+            backend='Database', subadmin=['HR'], quota=self.quota_1,
+            email='alex_hr@example.com',
+            displayname='Ivanov Alex', phone='+79010010102',
+            address='Russia, Surgut', website='https://www.example.ru',
+            twitter='@alex_hr', groups=[self.grp_1, self.grp_2],
+            language='en', locale='en',
+            backendCapabilities=self.bc
+            )
+
+    def tearDown(self):
+        self.user=None
+        self.grp_1=None
+        self.grp_2=None
+        self.quota_1=None
+        self.bc
+
+    def test___init__0(self):
+
+        self.assertEqual( self.user.id, 'alex')
+        self.assertEqual( self.user.enabled, True)
+        self.assertEqual( self.user.storage_location,
+            '/home/nextcloud/alex@example.com')
+        self.assertEqual( self.user.last_login,
+            datetime(1970, 1, 1, 0, 0))
+        self.assertEqual( self.user.backend, 'Database')
+        self.assertListEqual( self.user.subadmin, ['HR'])
+
+        self.assertEqual( self.user.quota, self.quota_1)
+        self.assertEqual( self.user.email, 'alex_hr@example.com')
+        self.assertEqual( self.user.displayname, 'Ivanov Alex')
+        self.assertEqual( self.user.website, 'https://www.example.ru')
+        self.assertEqual( self.user.twitter, '@alex_hr')
+        self.assertListEqual( self.user.groups,
+            [self.grp_1, self.grp_2])
+        self.assertEqual( self.user.language, 'en')
+        self.assertEqual( self.user.locale, 'en')
+        self.assertEqual( self.user.backend_capabilities, self.bc)
+
+    def test___str__0(self):
+        self.assertEqual( str(self.user), '''<User> (alex) "Ivanov Alex" enabled: True, e-mail: alex_hr@example.com
+	backend: Database, storage location: /home/nextcloud/alex@example.com, last logon: 1970-01-01T00:00:00
+	quota: Quota: 10.00g, used: 2.26g, free: 7.74g, total: 10.00g, relative: 22.65
+	phone: +79010010102, twitter: @alex_hr, website: https://www.example.ru
+	address: Russia, Surgut
+	language: en, locale: en
+	<Group> "HR" [Subadmin]
+	<Group> "staff"
+	<BackendCapabilities> setDisplayName: True,  setPassword: True''')
+
 
 class TestUserQuota(unittest.TestCase):
     def setUp(self):
@@ -405,6 +478,228 @@ class TestOcs_xml(unittest.TestCase):
         self.assertEqual(rsp.status,'failure')
         self.assertEqual(rsp.statuscode,'997')
         self.assertEqual(rsp.message,'Current user is not logged in')
+
+    def test_get_status(self):
+        rsp=ocs.Ocs_xml(self.resp2,data_class_name='')
+        self.assertEqual(rsp.get_status(), "Status: failure, code: 997, message: Current user is not logged in")
+
+class TestOcs_xml1(unittest.TestCase):
+    def setUp(self):
+        self.resp = '''<ocs>
+ <meta>
+  <status>ok</status>
+  <statuscode>100</statuscode>
+  <message>OK</message>
+  <totalitems></totalitems>
+  <itemsperpage></itemsperpage>
+ </meta>
+ <data>
+  <element>
+   <id>1</id>
+   <mount_point>{IT}</mount_point>
+   <groups>
+    <element group_id="IT" permissions="31"/>
+   </groups>
+   <quota>-3</quota>
+   <size>39136618129</size>
+  </element>
+  <element>
+   <id>2</id>
+   <mount_point>{FIS}</mount_point>
+   <groups>
+    <element group_id="FIS" permissions="31"/>
+   </groups>
+   <quota>32212254720</quota>
+   <size>11052652856</size>
+  </element>
+  <element>
+   <id>19</id>
+   <mount_point>{SECURITY}</mount_point>
+   <groups>
+    <element group_id="SECURITY" permissions="31"/>
+   </groups>
+   <quota>21474836480</quota>
+   <size>6834174935</size>
+  </element>
+  <element>
+   <id>22</id>
+   <mount_point>{TEST_NC1}</mount_point>
+   <groups>
+    <element group_id="TEST_NC1" permissions="31"/>
+   </groups>
+   <quota>8589934592</quota>
+   <size>113153</size>
+  </element>
+ </data>
+</ocs>
+'''
+        self.obj=ocs.Ocs_xml(self.resp,data_class_name='GroupFolder')
+
+    def tearDown(self):
+        self.resp=None
+        self.obj=None
+
+    def test__init__0(self):
+        gf1=ocs.GroupFolder(id='1',mount_point='{IT}',
+            groups=[ocs.Group(group_id="IT",permissions=PERMISSION_ALL)],
+            quota='-3',size='39136618129')
+        gf2=ocs.GroupFolder(id='2',mount_point='{FIS}',
+            groups=[ocs.Group(group_id="FIS",permissions=PERMISSION_ALL)],
+            quota='32212254720',size='11052652856')
+        gf3=ocs.GroupFolder(id='19',mount_point='{SECURITY}',
+            groups=[ocs.Group(group_id="SECURITY",permissions=PERMISSION_ALL)],
+            quota='21474836480',size='6834174935')
+        gf4=ocs.GroupFolder(id='22',mount_point='{TEST_NC1}',
+            groups=[ocs.Group(group_id="TEST_NC1",permissions=PERMISSION_ALL)],
+            quota='8589934592',size='113153')
+
+        self.assertEqual(self.obj.status,'ok')
+        self.assertEqual(self.obj.statuscode,'100')
+        self.assertEqual(self.obj.message,'OK')
+        self.assertListEqual(self.obj.data, [gf1,gf2,gf3,gf4])
+
+    def test__str__(self):
+        st='''<Ocs_xml> ok (100): OK
+<GroupFolder> (1) "{IT}" quota: -3, size: 36.45g
+  <Group> "IT" [cruds]
+<GroupFolder> (2) "{FIS}" quota: 30.00g, size: 10.29g
+  <Group> "FIS" [cruds]
+<GroupFolder> (19) "{SECURITY}" quota: 20.00g, size: 6.36g
+  <Group> "SECURITY" [cruds]
+<GroupFolder> (22) "{TEST_NC1}" quota: 8.00g, size: 110.50k
+  <Group> "TEST_NC1" [cruds]\n'''
+        self.assertEqual(str(self.obj),st)
+
+class TestOcs_xml2(unittest.TestCase):
+    def setUp(self):
+        self.resp = '''<ocs>
+ <meta>
+  <status>ok</status>
+  <statuscode>100</statuscode>
+  <message>OK</message>
+  <totalitems></totalitems>
+  <itemsperpage></itemsperpage>
+ </meta>
+ <data>
+  <groups>
+   <element>FIS</element>
+   <element>IT</element>
+   <element>PHD</element>
+   <element>SECURITY</element>
+   <element>TEST_NC1</element>
+  </groups>
+ </data>
+</ocs>
+'''
+        self.obj=ocs.Ocs_xml(self.resp,data_class_name='Group')
+
+    def tearDown(self):
+        self.resp=None
+        self.obj=None
+
+    def test__init__0(self):
+        g1=ocs.Group(group_id="FIS",permissions=PERMISSION_READ)
+        g2=ocs.Group(group_id="IT",permissions=PERMISSION_READ)
+        g3=ocs.Group(group_id="PHD",permissions=PERMISSION_READ)
+        g4=ocs.Group(group_id="SECURITY",permissions=PERMISSION_READ)
+        g5=ocs.Group(group_id="TEST_NC1",permissions=PERMISSION_READ)
+        self.assertEqual(self.obj.status,'ok')
+        self.assertEqual(self.obj.statuscode,'100')
+        self.assertEqual(self.obj.message,'OK')
+        self.assertListEqual(self.obj.data, [g1,g2,g3,g4,g5])
+
+    def test__str__(self):
+        st='''<Ocs_xml> ok (100): OK
+<Group> "FIS" [r]
+<Group> "IT" [r]
+<Group> "PHD" [r]
+<Group> "SECURITY" [r]
+<Group> "TEST_NC1" [r]\n'''
+        self.assertEqual(str(self.obj),st)
+
+
+class TestOcs_xml3(unittest.TestCase):
+    def setUp(self):
+        self.resp = '''<ocs>
+ <meta>
+  <status>ok</status>
+  <statuscode>100</statuscode>
+  <message>OK</message>
+  <totalitems></totalitems>
+  <itemsperpage></itemsperpage>
+ </meta>
+ <data>
+  <id>13</id>
+  <groups/>
+ </data>
+</ocs>
+'''
+        self.obj=ocs.Ocs_xml(self.resp,data_class_name='CreateGroupFolder')
+
+    def tearDown(self):
+        self.resp=None
+        self.obj=None
+
+    def test__init__0(self):
+        cgf=ocs.CreateGroupFolder(id="13")
+        self.assertEqual(self.obj.status,'ok')
+        self.assertEqual(self.obj.statuscode,'100')
+        self.assertEqual(self.obj.message,'OK')
+        self.assertListEqual(self.obj.data, [cgf])
+
+    def test__str__(self):
+        st='''<Ocs_xml> ok (100): OK
+<CreateGroupFolder> id: 13\n'''
+        self.assertEqual(str(self.obj),st)
+
+class TestOcs_xml4(unittest.TestCase):
+    def setUp(self):
+        self.resp = '''<ocs>
+ <meta>
+  <status>ok</status>
+  <statuscode>100</statuscode>
+  <message>OK</message>
+  <totalitems></totalitems>
+  <itemsperpage></itemsperpage>
+ </meta>
+ <data>
+  <users>
+   <element>tester1@example.com</element>
+   <element>tester2@example.com</element>
+   <element>tester3@example.com</element>
+   <element>tester4@example.com</element>
+   <element>tester5@example.com</element>
+  </users>
+ </data>
+</ocs>
+
+'''
+        self.obj=ocs.Ocs_xml(self.resp,data_class_name='GroupMembers')
+
+    def tearDown(self):
+        self.resp=None
+        self.obj=None
+
+    def test__init__0(self):
+        u1=ocs.GroupMembers(user_id="tester1@example.com")
+        u2=ocs.GroupMembers(user_id="tester2@example.com")
+        u3=ocs.GroupMembers(user_id="tester3@example.com")
+        u4=ocs.GroupMembers(user_id="tester4@example.com")
+        u5=ocs.GroupMembers(user_id="tester5@example.com")
+
+        self.assertEqual(self.obj.status,'ok')
+        self.assertEqual(self.obj.statuscode,'100')
+        self.assertEqual(self.obj.message,'OK')
+        self.assertListEqual(self.obj.data, [u1,u2,u3,u4,u5])
+
+    def test__str__(self):
+        st='''<Ocs_xml> ok (100): OK
+user_id: tester1@example.com
+user_id: tester2@example.com
+user_id: tester3@example.com
+user_id: tester4@example.com
+user_id: tester5@example.com\n'''
+        self.assertEqual(str(self.obj),st)
 
 if __name__ == '__main__':
     unittest.main()

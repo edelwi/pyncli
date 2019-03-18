@@ -103,7 +103,29 @@ def human_permissions(permissions,short=False):
     else:
         return ' | '.join(rez)
 
-class GroupMembers(object):
+class Comparer(object):
+    """
+        Mixin class to add compare methods
+    """
+
+    def __getitem__(self,name):
+        if name in self.__dict__:
+            return self.__dict__[name]
+        else:
+            return False
+
+    def __eq__(self, instance):
+        if type(instance) is not self.__class__:
+            return False
+        for (key, value) in list(self.__dict__.items()):
+            if self.__getitem__(key)!=instance.__getitem__(key):
+                return False
+        return True
+
+    def __ne__(self,instance):
+        return not self.__eq__(instance)
+
+class GroupMembers(Comparer):
     """
         GroupMembers class
     """
@@ -113,7 +135,7 @@ class GroupMembers(object):
     def __str__(self):
         return u'user_id: {id}'.format(id=self.user_id)
 
-class CreateGroupFolder(object):
+class CreateGroupFolder(Comparer):
     """
         CreateGroupFolder class
     """
@@ -123,14 +145,17 @@ class CreateGroupFolder(object):
     def __str__(self):
         return u'<CreateGroupFolder> id: {id}'.format(id=self.id)
 
-class Group(object):
+class Group(Comparer):
     """
         Group class
     """
 
     def __init__(self,group_id=0,permissions=PERMISSION_READ):
         self.group_id=group_id
-        self.permissions=permissions
+        try:
+            self.permissions=int(permissions)
+        except ValueError:
+            raise WrongParam("Invalid permissions: {p}".format(p=permissions))
 
     def __str__(self):
         return u'<Group> "{gr}" [{per}]'.format(gr=self.group_id,
@@ -140,7 +165,7 @@ class Group(object):
     def info(self):
         return u'<Group> "{gr}"'.format(gr=self.group_id)
 
-class GroupFolder(object):
+class GroupFolder(Comparer):
     """
         GroupFolder class
     """
@@ -164,7 +189,7 @@ class GroupFolder(object):
             out=out[:-1]
         return out
 
-class User(object):
+class User(Comparer):
     """
         NextCloud User
     """
@@ -227,7 +252,7 @@ class User(object):
         out+='\t{backend}'.format(backend=self.backend_capabilities)
         return out
 
-class UserQuota(object):
+class UserQuota(Comparer):
     """
         NextCloud user quota class
     """
@@ -254,7 +279,7 @@ class UserQuota(object):
             out+=', relative: {relative}'.format(relative=self.relative)
         return out+'\n'
 
-class BackendCapabilities(object):
+class BackendCapabilities(Comparer):
     """
         NectCloud BackendCapabilities class
     """

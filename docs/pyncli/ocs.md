@@ -19,6 +19,14 @@ human_permissions(permissions, short=False)
 ```
 Get permissions in readable form.
 
+<h3 id="pyncli.ocs.ocs.Comparer">Comparer</h3>
+
+```python
+Comparer(self, /, *args, **kwargs)
+```
+
+Mixin class to add compare methods
+
 <h3 id="pyncli.ocs.ocs.GroupMembers">GroupMembers</h3>
 
 ```python
