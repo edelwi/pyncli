@@ -5,7 +5,7 @@ site_name: "pyncli"
 # that allows you to use an external Markdown file (eg. your project's README)
 # in the documentation. The path must be relative to current working directory.
 nav:
-- Home: index.md << README.md
+- Home: index.md
 - pyncli.ocs:
   - Simple Ocs API: pyncli/ocs.md
 - pyncli.ldap:
