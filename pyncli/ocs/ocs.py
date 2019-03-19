@@ -310,8 +310,7 @@ class Ocs_xml(object):
         try:
             self.respose=ET.fromstring(xml_text)
         except ParseError as e:
-            raise WrongParam("Invalid xml_text parameter value: {e}".format(
-                e=e))
+            raise WrongParam("Invalid xml_text parameter value. XML Parse Error.")
         self.status=self.respose.find(".//meta/status").text \
             if self.respose.find(".//meta/status") is not None else 'unknown'
         self.statuscode=self.respose.find(".//meta/statuscode").text \

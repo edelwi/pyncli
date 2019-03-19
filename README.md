@@ -14,34 +14,74 @@ pip install -i https://test.pypi.org/simple/ pyncli
 
 ## Configurration
 
-You should create .env file in your users home directory to store your credentials and configuration parameters.
+You should set evironment variables like belowe or create .env file in your users home directory to store your credentials and configuration parameters.
 Like this:
 
-```
+```sh
+# The user of the cloud from which requests will be made.
 CLOUD_USER=admin
-CLOUD_USER_PWD=secret_pass
-CLOUD_BASE_URL=https://cloud.example.com
-LOG_TO_STDOUT=True
-LDAP_USER=ad_admin@example.com
-LDAP_USER_PWD=very_secret_pass
-LDAP_HOST=dc1.example.com
-LDAP_BASE_DN=dc=example,dc=com
-LDAP_ADD_SERVER=dc2.example.com
-LDAP_SEARCH_FOR_GROUPS=OU=special_groups,OU=groups,dc=example,dc=com
-USER_DEFAULT_QUOTA=5368709120
-GF_NAME_PREFIX=
-GF_NAME_SUFFIX=
-GF_PERMISSION_DEFAULT_STR=r
- 
-LOG_FILE=pyncli.log
-LOG_MAX_BYTES=10240000
-LOG_BACKUP_COUNT=12
-  
-LDAP_NEW_GROUP_DESCRIPTION=Access group to cloud group
 
-LDAP_GRP_NAME_PREFIX=Cloud_
-LDAP_GRP_NAME_SUFFIX=
-LDAP_PARENT_GRP_NAME=None  
+# Cloud users password.
+CLOUD_USER_PWD=admin
+
+# Your NextCloud server URL. Or you can try a demo server, first create it at https://demo.nextcloud.com.
+CLOUD_BASE_URL=https://demo.nextcloud.com/random_/
+
+# Print log on console.
+LOG_TO_STDOUT=True
+# Log file name.
+LOG_FILE=pyncli.log
+
+# The maximum size of the log file.
+LOG_MAX_BYTES=10240000
+
+# Backups log files count.
+LOG_BACKUP_COUNT=12
+
+# User in your LDAP who can create groups in LDAP_SEARCH_FOR_GROUPS location. 
+# If you are not using an LDAP server, leave this variable empty and ignore all other variables whose names begin with LDAP_.
+LDAP_USER=ad_admin@example.com
+
+# LDAP users password.
+LDAP_USER_PWD=very_secret_pass
+
+# Primary LDAP server. Used ldaps bind on port 636 by default.
+LDAP_HOST=dc1.example.com
+
+# Additional server, if specified, uses round-robin binding.
+LDAP_ADD_SERVER=dc2.example.com
+
+# Base distinctive names, which is used when searching for users.
+LDAP_BASE_DN=dc=example,dc=com
+
+# Distinguished name of the group organizational unit used to work with ldap groups.
+LDAP_SEARCH_FOR_GROUPS=OU=special_groups,OU=groups,dc=example,dc=com
+
+# Description for created groups.
+LDAP_NEW_GROUP_DESCRIPTION="Access group to cloud group"
+
+# The prefix for the name of the ldap group to the corresponding cloud group.
+LDAP_GRP_NAME_PREFIX="Cloud_"
+
+# The suffix for the name of the ldap group to the corresponding cloud group.
+LDAP_GRP_NAME_SUFFIX=""
+
+# Parent group in which all newly created LDAP groups will be placed.
+LDAP_PARENT_GRP_NAME="My_cloud_shares"
+
+# The quota value that will be applied by default unless explicitly specified. Default 5Gb. Set -3 to unlimited.
+USER_DEFAULT_QUOTA="5368709120"
+
+# The prefix for the group folder name. So you can help the user to distinguish personal folders from group folders. I use surrounding curly braces.
+GF_NAME_PREFIX="{"
+
+# The suffix for the group folder name. So you can help the user to distinguish personal folders from group folders.
+GF_NAME_SUFFIX="}"
+
+# The permissions value that will be applied by default unless explicitly specified.
+GF_PERMISSION_DEFAULT_STR="r"
+  
+ 
 ```
 
 
@@ -218,7 +258,7 @@ If you use ldap backend to NextCloud, it may be useful.
 
 ## Documentation
 
-Documentation is available at - [readthedocs] (https://pyncli.readthedocs.io/)
+Documentation is available at - [pyncli documentation](https://pyncli.readthedocs.io "see on readthedocs")
 
 
 ## Authors

@@ -24,7 +24,7 @@ from pyncli.ldap import operate2
 from pyncli.ldap import group
 import logging
 from logging.handlers import RotatingFileHandler
-from pyncli.ldap.admexept import AdminException, OperationFailure
+from pyncli.ldap.admexept import AdminException, OperationFailure, WrongParam
 import re
 
 PERMISSION_DEFAULT_STR = Config.GF_PERMISSION_DEFAULT_STR #'r'
@@ -152,7 +152,7 @@ def new_groupfolder(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
 
@@ -167,7 +167,7 @@ def new_groupfolder(args):
             groups=[ncgroup],quota=quota)
     cloud.batch_new_group_folder(gf)
 
-    if 'user_ldap' in cloud._apps:
+    if 'user_ldap' in cloud._apps and  Config.LDAP_USER:
         try:
             adm=operate2.admin(Config.LDAP_USER, Config.LDAP_USER_PWD,
                 [Config.LDAP_HOST, Config.LDAP_ADD_SERVER])
@@ -269,12 +269,12 @@ def new_group(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
     cloud.new_group(group_name)
     ncgroup=ocs.Group(group_name)
-    if 'user_ldap' in cloud._apps:
+    if 'user_ldap' in cloud._apps and  Config.LDAP_USER:
         try:
             adm=operate2.admin(Config.LDAP_USER, Config.LDAP_USER_PWD,
                 [Config.LDAP_HOST, Config.LDAP_ADD_SERVER])
@@ -366,7 +366,7 @@ def new_user(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
     try:
@@ -401,11 +401,11 @@ def del_group_member(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
 
-    if 'user_ldap' in cloud._apps:
+    if 'user_ldap' in cloud._apps and  Config.LDAP_USER:
         try:
             adm=operate2.admin(Config.LDAP_USER, Config.LDAP_USER_PWD,
                 [Config.LDAP_HOST, Config.LDAP_ADD_SERVER])
@@ -490,11 +490,11 @@ def del_group(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
 
-    if 'user_ldap' in cloud._apps:
+    if 'user_ldap' in cloud._apps and  Config.LDAP_USER:
         try:
             adm=operate2.admin(Config.LDAP_USER, Config.LDAP_USER_PWD,
                 [Config.LDAP_HOST, Config.LDAP_ADD_SERVER])
@@ -529,7 +529,7 @@ def del_group_link(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
     if 'groupfolders' not in cloud._apps:
@@ -561,11 +561,11 @@ def del_groupfolder(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
 
-    if 'user_ldap' in cloud._apps:
+    if 'user_ldap' in cloud._apps and  Config.LDAP_USER:
         try:
             adm=operate2.admin(Config.LDAP_USER, Config.LDAP_USER_PWD,
                 [Config.LDAP_HOST, Config.LDAP_ADD_SERVER])
@@ -617,7 +617,7 @@ def del_group_subadmins(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
 
@@ -639,7 +639,7 @@ def del_user(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
 
@@ -660,7 +660,7 @@ def add_group(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
 
@@ -703,11 +703,11 @@ def add_user(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
 
-    if 'user_ldap' in cloud._apps:
+    if 'user_ldap' in cloud._apps and  Config.LDAP_USER:
         try:
             adm=operate2.admin(Config.LDAP_USER, Config.LDAP_USER_PWD,
                 [Config.LDAP_HOST, Config.LDAP_ADD_SERVER])
@@ -800,11 +800,11 @@ def add_users(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
 
-    if 'user_ldap' in cloud._apps:
+    if 'user_ldap' in cloud._apps and  Config.LDAP_USER:
         try:
             adm=operate2.admin(Config.LDAP_USER, Config.LDAP_USER_PWD,
                 [Config.LDAP_HOST, Config.LDAP_ADD_SERVER])
@@ -871,7 +871,7 @@ def get_apps(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
 
@@ -889,7 +889,7 @@ def get_groupfolders(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
 
@@ -910,12 +910,12 @@ def get_groups(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
     groups=cloud.get_groups()
     for itm in groups:
-        print(itm)
+        print(itm.info)
 
 def get_group_members(args):
     """Get members of the group
@@ -928,7 +928,7 @@ def get_group_members(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
     members=cloud.get_group_members(group_name)
@@ -947,7 +947,7 @@ def get_group_permissions(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
 
@@ -976,7 +976,7 @@ def get_group_subadmins(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
 
@@ -995,7 +995,7 @@ def get_groupfolder(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
 
@@ -1021,7 +1021,7 @@ def get_users(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
 
@@ -1041,7 +1041,7 @@ def get_user(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
 
@@ -1064,7 +1064,7 @@ def get_groupfolder_members(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
 
@@ -1096,7 +1096,7 @@ def set_groupfolder_quota(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
 
@@ -1124,7 +1124,7 @@ def set_groupfolder_name(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
 
@@ -1153,7 +1153,7 @@ def set_group_permissions(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
 
@@ -1186,7 +1186,7 @@ def set_group_subadmins(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
 
@@ -1207,7 +1207,7 @@ def set_user(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
     cloud.set_user(user_id=login,**vars(args))
@@ -1227,7 +1227,7 @@ def set_user_enable(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
     cloud.enable_user(login)
@@ -1247,7 +1247,7 @@ def set_user_disable(args):
     try:
         cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD,
             Config.CLOUD_BASE_URL)
-    except OperationFailure as e:
+    except (OperationFailure, WrongParam) as e:
         logger.error('Could not connect to the cloud: {e}'.format(e=e.value))
         exit(1)
     cloud.disable_user(login)
@@ -1787,17 +1787,8 @@ def main():
     command_line()
     logger.debug("<<<<<<<<<<")
 
-def tt():
-    adm=operate2.admin(Config.LDAP_USER, Config.LDAP_USER_PWD,
-                [Config.LDAP_HOST, Config.LDAP_ADD_SERVER])
-    grp='Cloud_TEST_GRP6'
-    z=adm.get_group(grp,grp_cls_name='group')
-    adm.delete_group(grp)
-    print(z)
-
 
 if __name__ == '__main__':
     ch=None
-    #logger = logging.getLogger('ocs')
-    #main()
-    tt()
+    logger = logging.getLogger('ocs')
+    main()
