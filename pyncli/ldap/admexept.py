@@ -85,14 +85,10 @@ class NotFound(AdminException):
 
     """
 
-def main():
-    import sys
-    import inspect
-    print( [x[0] for x in inspect.getmembers(sys.modules[__name__], inspect.isclass) ])
-
-##    for name, obj in inspect.getmembers(sys.modules[__name__]):
-##        if inspect.isclass(obj):
-##            print obj.__name__
-
-if __name__ == '__main__':
-    main()
+##def main():
+##    import sys
+##    import inspect
+##    print( [x[0] for x in inspect.getmembers(sys.modules[__name__], inspect.isclass) ])
+##
+##if __name__ == '__main__':
+##    main()

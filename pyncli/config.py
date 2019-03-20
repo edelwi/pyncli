@@ -108,5 +108,3 @@ class Config(object):
     GF_PERMISSION_DEFAULT_STR = os.environ.get('GF_PERMISSION_DEFAULT_STR') or 'r'
     """The permissions value that will be applied by default unless explicitly
         specified."""
-
-

@@ -75,7 +75,7 @@ def human_size(size_in_bytes):
     try:
         size_in_bytes=int(size_in_bytes)
     except:
-        return size_in_bytes
+        return None#size_in_bytes
     if size_in_bytes <= MUL[next(iter(MUL))]:
         return str(size_in_bytes)
     else:
@@ -91,7 +91,7 @@ def human_permissions(permissions,short=False):
     try:
         permissions=int(permissions)
     except:
-        return ''
+        return None
     if permissions > sum(PERMISSIONS.values()) or permissions < min(PERMISSIONS.values()):
         return ''
     rez=[]
@@ -150,12 +150,13 @@ class Group(Comparer):
         Group class
     """
 
-    def __init__(self,group_id=0,permissions=PERMISSION_READ):
+    def __init__(self,group_id=None,permissions=None):
         self.group_id=group_id
         try:
             self.permissions=int(permissions)
-        except ValueError:
-            raise WrongParam("Invalid permissions: {p}".format(p=permissions))
+        except (ValueError,TypeError):
+            #raise WrongParam("Invalid permissions: {p}".format(p=permissions))
+            self.permissions=None
 
     def __str__(self):
         return u'<Group> "{gr}" [{per}]'.format(gr=self.group_id,
@@ -170,7 +171,7 @@ class GroupFolder(Comparer):
         GroupFolder class
     """
 
-    def __init__(self,id=0,mount_point='nothing',groups=[], quota=-3, size=0):
+    def __init__(self,id=None,mount_point=None,groups=None, quota=None, size=None):
         self.id=id
         self.mount_point=mount_point
         self.groups=[x for x in groups] if groups else []
@@ -194,10 +195,10 @@ class User(Comparer):
         NextCloud User
     """
 
-    def __init__(self, id=0, enabled=True, storageLocation='', lastLogin=0,
-        backend='', subadmin=[], quota=None, email='', displayname='',
-        phone='', address='', website='', twitter='', groups=[],
-        language='ru', locale='ru', backendCapabilities=None):
+    def __init__(self, id=None, enabled=None, storageLocation=None,
+        lastLogin=None, backend=None, subadmin=None, quota=None, email=None,
+        displayname=None, phone=None, address=None, website=None, twitter=None,
+        groups=None, language=None, locale=None, backendCapabilities=None):
 
         self.id = id
         self.enabled = bool(enabled)
@@ -284,7 +285,7 @@ class BackendCapabilities(Comparer):
         NectCloud BackendCapabilities class
     """
 
-    def __init__(self, setDisplayName=0, setPassword=0 ):
+    def __init__(self, setDisplayName=None, setPassword=None ):
         self.set_display_name = bool(setPassword)
         self.set_password = bool(setPassword)
 

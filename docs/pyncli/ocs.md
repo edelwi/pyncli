@@ -46,7 +46,7 @@ CreateGroupFolder class
 <h3 id="pyncli.ocs.ocs.Group">Group</h3>
 
 ```python
-Group(self, group_id=0, permissions=1)
+Group(self, group_id=None, permissions=None)
 ```
 
 Group class
@@ -54,7 +54,7 @@ Group class
 <h3 id="pyncli.ocs.ocs.GroupFolder">GroupFolder</h3>
 
 ```python
-GroupFolder(self, id=0, mount_point='nothing', groups=[], quota=-3, size=0)
+GroupFolder(self, id=None, mount_point=None, groups=None, quota=None, size=None)
 ```
 
 GroupFolder class
@@ -62,7 +62,7 @@ GroupFolder class
 <h3 id="pyncli.ocs.ocs.User">User</h3>
 
 ```python
-User(self, id=0, enabled=True, storageLocation='', lastLogin=0, backend='', subadmin=[], quota=None, email='', displayname='', phone='', address='', website='', twitter='', groups=[], language='ru', locale='ru', backendCapabilities=None)
+User(self, id=None, enabled=None, storageLocation=None, lastLogin=None, backend=None, subadmin=None, quota=None, email=None, displayname=None, phone=None, address=None, website=None, twitter=None, groups=None, language=None, locale=None, backendCapabilities=None)
 ```
 
 NextCloud User
@@ -78,7 +78,7 @@ NextCloud user quota class
 <h3 id="pyncli.ocs.ocs.BackendCapabilities">BackendCapabilities</h3>
 
 ```python
-BackendCapabilities(self, setDisplayName=0, setPassword=0)
+BackendCapabilities(self, setDisplayName=None, setPassword=None)
 ```
 
 NectCloud BackendCapabilities class

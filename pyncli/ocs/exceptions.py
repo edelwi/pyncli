@@ -6,33 +6,31 @@
 # Author:      Evgeniy Semenov
 #
 # Created:     21.05.2018
-# Copyright:   (c) Evgeniy Semenov 2018
+# Copyright:   (c) Evgeniy Semenov 2018-2019
 # Licence:     MIT
 #-------------------------------------------------------------------------------
 
 class AdminException(Exception):
-    """ Корневой класс исключений для работы пакета.
+    """Root package exception class.
 
     Args:
-        value (str): Человекочитаемое строковое описание исключения.
+        value (str): Description of the exception.
 
     Attributes:
-        value (str): Человекочитаемое строковое описание исключения.
+        value (str): Description of the exception.
     """
 
     def __init__(self, value):
         self.value = value
-##    def __str__(self):
-##        #return self.value
-##        return unicode(self.value).encode('utf-8')
+
 
 class OperationFailure(AdminException):
-    """ Класс исключения вызываемый в случае невозможности выполнения
-    указанной операции.
+    """ Exception class called when it is impossible to perform the specified
+    operation.
 
     Args:
-        value (str): Человекочитаемое строковое описание исключения.
+        value (str): Description of the exception.
 
     Attributes:
-        value (str): Человекочитаемое строковое описание исключения.
+        value (str): Description of the exception.
     """

@@ -191,7 +191,7 @@ def new_groupfolder(args):
                         u=usr['fullname']))
                 else:
                     logger.warning('Searching for user "{u}" returned an ambiguous result: {r}. Set the user by login.'.format(
-                        u=usr['fullname'], r=', '.join(u.brief) ))
+                        u=usr['fullname'], r=', '.join(x.brief for x in u) ))
             elif 'login' in usr:
                 if '@' in usr['login']:
                     u=adm.search_users_p("(&(objectClass=user)(userPrincipalName={login})(!(UserAccountControl:1.2.840.113556.1.4.803:=2)))".format(
@@ -208,7 +208,7 @@ def new_groupfolder(args):
                         u=usr['login']))
                 else:
                     logger.warning('Searching for user "{u}" returned an ambiguous result: {r}. This should not be!'.format(
-                        u=usr['login'], r=', '.join(u.brief) ))
+                        u=usr['login'], r=', '.join(x.brief for x in u) ))
 
     if ldap_ok:
         for usr in user_obj_list:
@@ -298,7 +298,7 @@ def new_group(args):
                         u=usr['fullname']))
                 else:
                     logger.warning('Searching for user \"{u}\" returned an ambiguous result: {r}. Set the user by login.'.format(
-                        u=usr['fullname'], r=', '.join(u.brief) ))
+                        u=usr['fullname'], r=', '.join(x.brief for x in u) ))
             elif 'login' in usr:
                 if '@' in usr['login']:
                     u=adm.search_users_p("(&(objectClass=user)(userPrincipalName={login})(!(UserAccountControl:1.2.840.113556.1.4.803:=2)))".format(
@@ -315,7 +315,7 @@ def new_group(args):
                         u=usr['login']))
                 else:
                     logger.warning('Searching for user \"{u}\" returned an ambiguous result: {r}. This should not be!'.format(
-                        u=usr['fullname'], r=', '.join(u.brief) ))
+                        u=usr['fullname'], r=', '.join(x.brief for x in u) ))
 
     if ldap_ok:
         for usr in user_obj_list:
@@ -432,7 +432,7 @@ def del_group_member(args):
                 u=login))
         else:
             logger.warning('Searching for user \"{u}\" returned an ambiguous result: {r}. This should not be!'.format(
-                u=login, r=', '.join(u.brief) ))
+                u=login, r=', '.join(x.brief for x in u) ))
 
         cloud_group=cloud.remove_user_from_group(
             user_id=user_obj_list[0].principal_name,group_id=group_name)
@@ -458,7 +458,7 @@ def del_group_member(args):
             return
         else:
             logger.warning('Searching for user \"{u}\" returned an ambiguous result: {r}. Set the user by login.'.format(
-                u=fullname, r=', '.join(u.brief) ))
+                u=fullname, r=', '.join(x.brief for x in u) ))
             return
         cloud.remove_user_from_group(user_id=user_obj_list[0].principal_name,
             group_id=group_name)
@@ -514,7 +514,12 @@ def del_group(args):
             description="{descr} {gr}".format(
                 descr=Config.LDAP_NEW_GROUP_DESCRIPTION,
                 gr=group_name))
-        adm.delete_group(ldap_grp)
+        try:
+            adm.delete_group(ldap_grp)
+        except (NotFound, OperationFailure) as e:
+            logger.error('Could not delete ldapgroup {g}. Error: {e}'.format(
+                g=ldap_grp.brief,
+                e=e.value))
 
 def del_group_link(args):
     """Unlink group from the groupfolder
@@ -734,7 +739,7 @@ def add_user(args):
                 u=login))
         else:
             logger.warning('Searching for user \"{u}\" returned an ambiguous result: {r}. This should not be!'.format(
-                u=login, r=', '.join(u.brief) ))
+                u=login, r=', '.join(x.brief for x in u) ))
 
         cloud_group=cloud.add_user_to_group(
             user_id=user_obj_list[0].principal_name,group_id=group_name)
@@ -758,7 +763,7 @@ def add_user(args):
             return
         else:
             logger.warning('Searching for user \"{u}\" returned an ambiguous result: {r}. Set the user by login.'.format(
-                u=fullname, r=', '.join(u.brief) ))
+                u=fullname, r=', '.join(x.brief for x in u) ))
             return
         cloud.add_user_to_group(user_id=user_obj_list[0].principal_name,
             group_id=group_name)
@@ -827,7 +832,7 @@ def add_users(args):
                     u=usr['fullname']))
             else:
                 logger.warning('Searching for user \"{u}\" returned an ambiguous result: {r}. Set the user by login.'.format(
-                    u=usr['fullname'], r=', '.join(u.brief) ))
+                    u=usr['fullname'], r=', '.join(x.brief for x in u) ))
         elif 'fullname' in usr and not ldap_ok:
             logger.warning('The directory is not available. I can not add a user by their full name. Skipping user {u}.'.format(
                 u=usr['fullname']))
@@ -847,7 +852,7 @@ def add_users(args):
                     u=usr['login']))
             else:
                 logger.warning('Searching for user \"{u}\" returned an ambiguous result: {r}. This should not be!'.format(
-                    u=usr['login'], r=', '.join(u.brief) ))
+                    u=usr['login'], r=', '.join(x.brief for x in u) ))
         elif 'login' in usr and not ldap_ok:
             user_obj_list.append( usr )
     if ldap_ok:
@@ -1367,7 +1372,7 @@ list of commands menu:
  groupfolder-quota   GroupFoldet quota
  groupfolder-name    rename GroupFolder
  group-permissions   permissions for the Group
- group-subadmins     subadmins for the Group
+ group-subadmin      subadmins for the Group
  user                change user parameters
  user-disable        disable user
  user-enable         enable user
@@ -1754,6 +1759,7 @@ list of commands menu:
     try:
         args.func(args)
     except AttributeError as e: # closed bug: https://github.com/datalad/datalad/issues/848
+        logger
         args = parser.parse_args([args.top,'-h'])
         args.func(args)
 
