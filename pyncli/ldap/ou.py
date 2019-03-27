@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Name:        ou
 # Purpose:  To implement ou class.
 #
@@ -8,7 +8,7 @@
 # Created:     13.04.2017
 # Copyright:   (c) Evgeniy Semenov 2017-2019
 # Licence:     MIT
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 import sys
 
@@ -16,27 +16,50 @@ from .admexept import NotEnoughParams, EmptyParam, WrongParam, TooLong
 
 from . import protoou
 
+
 class ou(protoou.protoou, metaclass=protoou.CleanSetAttrMeta):
     """
         Common Organizational Utit class
     """
 
-    _FIELD_MAP={
-                'name':'name',
-                'description':'description',
-    }
+    _FIELD_MAP = {"name": "name", "description": "description"}
 
-    #Ключи берём по классу, ограничения из ЛДАП
+    # Ключи берём по классу, ограничения из ЛДАП
     _LDAP_LIMITS = {
-                'name':{'min':1,'max':64,'fail_min':True,'fail_max':True}, # name==CN
-                'org_unit':{'min':1,'max':1024,'fail_min':True,'fail_max':True},
-                'dn':{'min':1,'max':4096,'fail_min':True,'fail_max':False}, #max size not found :(
-                'description':{'min':0,'max':1024,'fail_min':False,'fail_max':False},
+        "name": {
+            "min": 1,
+            "max": 64,
+            "fail_min": True,
+            "fail_max": True,
+        },  # name==CN
+        "org_unit": {
+            "min": 1,
+            "max": 1024,
+            "fail_min": True,
+            "fail_max": True,
+        },
+        "dn": {
+            "min": 1,
+            "max": 4096,
+            "fail_min": True,
+            "fail_max": False,
+        },  # max size not found :(
+        "description": {
+            "min": 0,
+            "max": 1024,
+            "fail_min": False,
+            "fail_max": False,
+        },
     }
-    _DEFAULT_SORT_ORDER=['name','description']
+    _DEFAULT_SORT_ORDER = ["name", "description"]
 
-
-    def __init__(self,name, org_unit='ou=test_ou,dc=example,dc=com', description='', **kwargs): #uid,
+    def __init__(
+        self,
+        name,
+        org_unit="ou=test_ou,dc=example,dc=com",
+        description="",
+        **kwargs
+    ):  # uid,
         """constructor
 
             Args:
@@ -48,22 +71,26 @@ class ou(protoou.protoou, metaclass=protoou.CleanSetAttrMeta):
                 WrongParam: The Organizational Utit parameter is not of the
                 correct type.
         """
-        attr_set=['name','org_unit','description']
+        attr_set = ["name", "org_unit", "description"]
         super(ou, self).__init__(name, org_unit, **kwargs)
 
-        l=locals()
+        l = locals()
         for attr in attr_set:
             if attr in list(l):
                 if not isinstance(l[attr], str):
                     try:
-                         #self.__setattr__(attr, unicode(l[attr], 'utf-8'))
-                         param=str(l[attr], 'utf-8')
+                        # self.__setattr__(attr, unicode(l[attr], 'utf-8'))
+                        param = str(l[attr], "utf-8")
                     except:
-                        raise WrongParam('Unicode string expected ({0}), conversion fails.'.format(attr))
-                    self.__setattr__(attr, self.check_length(attr,param))
+                        raise WrongParam(
+                            "Unicode string expected ({0}), conversion fails.".format(
+                                attr
+                            )
+                        )
+                    self.__setattr__(attr, self.check_length(attr, param))
                 else:
-                    #self.__setattr__(attr,l[attr])
-                    self.__setattr__(attr, self.check_length(attr,l[attr]))
+                    # self.__setattr__(attr,l[attr])
+                    self.__setattr__(attr, self.check_length(attr, l[attr]))
             else:
                 pass
                 # Игнорим неизвестные параметры
@@ -71,14 +98,20 @@ class ou(protoou.protoou, metaclass=protoou.CleanSetAttrMeta):
     def __setattr__(self, name, value):
         # без super не работают property
         super(protoou.protoou, self).__setattr__(name, value)
-        if name=='org_unit':
-            super(protoou.protoou,self).__setattr__( name, self.check_length( name, value) )
-            super(protoou.protoou,self).__setattr__( 'dn', self.check_length( 'dn', self.get_dn() ) )
+        if name == "org_unit":
+            super(protoou.protoou, self).__setattr__(
+                name, self.check_length(name, value)
+            )
+            super(protoou.protoou, self).__setattr__(
+                "dn", self.check_length("dn", self.get_dn())
+            )
         else:
-            super(protoou.protoou,self).__setattr__( name, self.check_length( name, value) )
+            super(protoou.protoou, self).__setattr__(
+                name, self.check_length(name, value)
+            )
 
     @classmethod
-    def get_sql_create_table(cls,table_name):
+    def get_sql_create_table(cls, table_name):
         """A class method that creates a database table definition suitable for
         uploading instances of a given class.
 
@@ -88,23 +121,23 @@ class ou(protoou.protoou, metaclass=protoou.CleanSetAttrMeta):
         Note:
             Suitable for SQLite.
         """
-        crr="CREATE TABLE \'{table}\'(".format(table=table_name)
-        names=getattr(cls,'_LDAP_LIMITS')
-        count=len(names)
-        i=0
+        crr = "CREATE TABLE '{table}'(".format(table=table_name)
+        names = getattr(cls, "_LDAP_LIMITS")
+        count = len(names)
+        i = 0
         for itm in list(names.keys()):
-            if i < count-1:
-                if itm=='dn':
-                    crr+=" \'{field}\' TEXT PRIMARY KEY,".format(field=itm)
+            if i < count - 1:
+                if itm == "dn":
+                    crr += " '{field}' TEXT PRIMARY KEY,".format(field=itm)
                 else:
-                    crr+=" \'{field}\' TEXT,".format(field=itm)
+                    crr += " '{field}' TEXT,".format(field=itm)
             else:
-                if itm=='dn':
-                    crr+=" \'{field}\' TEXT PRIMARY KEY".format(field=itm)
+                if itm == "dn":
+                    crr += " '{field}' TEXT PRIMARY KEY".format(field=itm)
                 else:
-                    crr+=" \'{field}\' TEXT".format(field=itm)
-            i+=1
-        crr+=');'
+                    crr += " '{field}' TEXT".format(field=itm)
+            i += 1
+        crr += ");"
         return crr
 
     def get_sql_insert(self, table_name):
@@ -117,21 +150,21 @@ class ou(protoou.protoou, metaclass=protoou.CleanSetAttrMeta):
         Note:
             Suitable for SQLite.
         """
-        ins="INSERT INTO \'{table}\'(".format(table=table_name)
-        vals=" VALUES ("
-        count=len(self._LDAP_LIMITS)
-        i=0
+        ins = "INSERT INTO '{table}'(".format(table=table_name)
+        vals = " VALUES ("
+        count = len(self._LDAP_LIMITS)
+        i = 0
         for itm in list(self._LDAP_LIMITS.keys()):
-            if i < count -1:
-                ins+="\'{itm}\', ".format(itm=itm)
-                vals+="\'{val}\', ".format(val=getattr( self, itm ))
+            if i < count - 1:
+                ins += "'{itm}', ".format(itm=itm)
+                vals += "'{val}', ".format(val=getattr(self, itm))
             else:
-                ins+="\'{itm}\')".format(itm=itm)
-                vals+="\'{val}\');".format(val=getattr( self, itm ))
-            i+=1
-        #ins+=u"acc_control , enabled) "
-        #vals+=u"\'{acc_cont}\', \'{enabled}\');".format(acc_cont=uac.get_control( self.acc_control),enabled=self.enabled )
-        return ins+vals
+                ins += "'{itm}')".format(itm=itm)
+                vals += "'{val}');".format(val=getattr(self, itm))
+            i += 1
+        # ins+=u"acc_control , enabled) "
+        # vals+=u"\'{acc_cont}\', \'{enabled}\');".format(acc_cont=uac.get_control( self.acc_control),enabled=self.enabled )
+        return ins + vals
 
     @property
     def brief(self):
@@ -141,6 +174,5 @@ class ou(protoou.protoou, metaclass=protoou.CleanSetAttrMeta):
             (str): brief Organizational Utit information
         """
         return "name :{name} ({description})".format(
-                name=self.name,
-                description=self.description)
-
+            name=self.name, description=self.description
+        )

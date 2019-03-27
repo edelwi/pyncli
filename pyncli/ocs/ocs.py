@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Name:        ocs API
 # Purpose:
 #
@@ -8,7 +8,7 @@
 # Created:     06.12.2018
 # Copyright:   (c) Evgeniy Semenov 2018-2019
 # Licence:     MIT
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 """This module implements little part of the web API for the NextCloud server.
 """
 import requests
@@ -20,14 +20,15 @@ from xml.etree.ElementTree import ParseError
 from pyncli.config import Config
 import logging
 from logging.handlers import RotatingFileHandler
-#import types
+
+# import types
 from collections import OrderedDict
 from datetime import datetime
 import sys
 import urllib.parse
 from copy import deepcopy
 
-logging.getLogger('ocs').addHandler(logging.NullHandler())
+logging.getLogger("ocs").addHandler(logging.NullHandler())
 
 
 PERMISSION_READ = 1
@@ -48,67 +49,74 @@ PERMISSION_SHARE = 16
 PERMISSION_ALL = 31
 """int: Shortcut for combinations of all possible permission (full controll) """
 
-PERMISSIONS={'PERMISSION_CREATE':PERMISSION_CREATE,
-             'PERMISSION_READ':PERMISSION_READ,
-             'PERMISSION_UPDATE':PERMISSION_UPDATE,
-             'PERMISSION_DELETE':PERMISSION_DELETE,
-             'PERMISSION_SHARE':PERMISSION_SHARE,
-             #'PERMISSION_ALL':PERMISSION_ALL
-             }
+PERMISSIONS = {
+    "PERMISSION_CREATE": PERMISSION_CREATE,
+    "PERMISSION_READ": PERMISSION_READ,
+    "PERMISSION_UPDATE": PERMISSION_UPDATE,
+    "PERMISSION_DELETE": PERMISSION_DELETE,
+    "PERMISSION_SHARE": PERMISSION_SHARE,
+    #'PERMISSION_ALL':PERMISSION_ALL
+}
 """Dict: Permissions and its values """
 
-MUL=OrderedDict(
-     [('k',1024),
-     ('m',1024*1024),
-     ('g',1024*1024*1024),
-     ('t',1024*1024*1024*1024)]
-    )
+MUL = OrderedDict(
+    [
+        ("k", 1024),
+        ("m", 1024 * 1024),
+        ("g", 1024 * 1024 * 1024),
+        ("t", 1024 * 1024 * 1024 * 1024),
+    ]
+)
 """OrderedDict: Quota size multiplicators an its values. """
 
-CLS_MAP={'ocs':'Ocs',
-    'groupfolders':'GroupFolderMixin',}
+CLS_MAP = {"ocs": "Ocs", "groupfolders": "GroupFolderMixin"}
 """Dict: Relations of the cloud applications to class mixin. """
+
 
 def human_size(size_in_bytes):
     """Get size in kilo,Mega,Giga... bytes.
     """
     try:
-        size_in_bytes=int(size_in_bytes)
+        size_in_bytes = int(size_in_bytes)
     except:
-        return None#size_in_bytes
+        return None  # size_in_bytes
     if size_in_bytes <= MUL[next(iter(MUL))]:
         return str(size_in_bytes)
     else:
-        for k,v in MUL.items():
-            vl=size_in_bytes/v
-            if vl<=MUL[next(iter(MUL))]:
-                return '{vl:.2f}{m}'.format(vl=vl,m=k)
-        return '{vl:.2f}{m}'.format(vl=vl,m=k)
+        for k, v in MUL.items():
+            vl = size_in_bytes / v
+            if vl <= MUL[next(iter(MUL))]:
+                return "{vl:.2f}{m}".format(vl=vl, m=k)
+        return "{vl:.2f}{m}".format(vl=vl, m=k)
 
-def human_permissions(permissions,short=False):
+
+def human_permissions(permissions, short=False):
     """Get permissions in readable form.
     """
     try:
-        permissions=int(permissions)
+        permissions = int(permissions)
     except:
         return None
-    if permissions > sum(PERMISSIONS.values()) or permissions < min(PERMISSIONS.values()):
-        return ''
-    rez=[]
-    for k,v in PERMISSIONS.items():
+    if permissions > sum(PERMISSIONS.values()) or permissions < min(
+        PERMISSIONS.values()
+    ):
+        return ""
+    rez = []
+    for k, v in PERMISSIONS.items():
         if permissions & v == v:
             rez.append(k)
     if short:
-        return ''.join( ((x.split('_')[1][:1]).lower() for x in rez ) )
+        return "".join(((x.split("_")[1][:1]).lower() for x in rez))
     else:
-        return ' | '.join(rez)
+        return " | ".join(rez)
+
 
 class Comparer(object):
     """
         Mixin class to add compare methods
     """
 
-    def __getitem__(self,name):
+    def __getitem__(self, name):
         if name in self.__dict__:
             return self.__dict__[name]
         else:
@@ -118,96 +126,126 @@ class Comparer(object):
         if type(instance) is not self.__class__:
             return False
         for (key, value) in list(self.__dict__.items()):
-            if self.__getitem__(key)!=instance.__getitem__(key):
+            if self.__getitem__(key) != instance.__getitem__(key):
                 return False
         return True
 
-    def __ne__(self,instance):
+    def __ne__(self, instance):
         return not self.__eq__(instance)
+
 
 class GroupMembers(Comparer):
     """
         GroupMembers class
     """
 
-    def __init__(self,user_id):
-        self.user_id=user_id
+    def __init__(self, user_id):
+        self.user_id = user_id
+
     def __str__(self):
-        return u'user_id: {id}'.format(id=self.user_id)
+        return "user_id: {id}".format(id=self.user_id)
+
 
 class CreateGroupFolder(Comparer):
     """
         CreateGroupFolder class
     """
 
-    def __init__(self,id):
-        self.id=id
+    def __init__(self, id):
+        self.id = id
+
     def __str__(self):
-        return u'<CreateGroupFolder> id: {id}'.format(id=self.id)
+        return "<CreateGroupFolder> id: {id}".format(id=self.id)
+
 
 class Group(Comparer):
     """
         Group class
     """
 
-    def __init__(self,group_id=None,permissions=None):
-        self.group_id=group_id
+    def __init__(self, group_id=None, permissions=None):
+        self.group_id = group_id
         try:
-            self.permissions=int(permissions)
-        except (ValueError,TypeError):
-            #raise WrongParam("Invalid permissions: {p}".format(p=permissions))
-            self.permissions=None
+            self.permissions = int(permissions)
+        except (ValueError, TypeError):
+            # raise WrongParam("Invalid permissions: {p}".format(p=permissions))
+            self.permissions = None
 
     def __str__(self):
-        return u'<Group> "{gr}" [{per}]'.format(gr=self.group_id,
-                per=human_permissions(self.permissions,short=True))
+        return '<Group> "{gr}" [{per}]'.format(
+            gr=self.group_id,
+            per=human_permissions(self.permissions, short=True),
+        )
 
     @property
     def info(self):
-        return u'<Group> "{gr}"'.format(gr=self.group_id)
+        return '<Group> "{gr}"'.format(gr=self.group_id)
+
 
 class GroupFolder(Comparer):
     """
         GroupFolder class
     """
 
-    def __init__(self,id=None,mount_point=None,groups=None, quota=None, size=None):
-        self.id=id
-        self.mount_point=mount_point
-        self.groups=[x for x in groups] if groups else []
-        self.quota=quota
-        self.size=size
+    def __init__(
+        self, id=None, mount_point=None, groups=None, quota=None, size=None
+    ):
+        self.id = id
+        self.mount_point = mount_point
+        self.groups = [x for x in groups] if groups else []
+        self.quota = quota
+        self.size = size
 
     def __str__(self):
-        out=u'<GroupFolder> ({id}) "{mp}" quota: {q}, size: {s}\n'.format(
+        out = '<GroupFolder> ({id}) "{mp}" quota: {q}, size: {s}\n'.format(
             mp=self.mount_point,
             id=self.id,
             q=human_size(self.quota),
-            s=human_size( self.size))
+            s=human_size(self.size),
+        )
         for it in self.groups:
-            out+=u"  {grp}\n".format(grp=it.__str__())
+            out += "  {grp}\n".format(grp=it.__str__())
         else:
-            out=out[:-1]
+            out = out[:-1]
         return out
+
 
 class User(Comparer):
     """
         NextCloud User
     """
 
-    def __init__(self, id=None, enabled=None, storageLocation=None,
-        lastLogin=None, backend=None, subadmin=None, quota=None, email=None,
-        displayname=None, phone=None, address=None, website=None, twitter=None,
-        groups=None, language=None, locale=None, backendCapabilities=None):
+    def __init__(
+        self,
+        id=None,
+        enabled=None,
+        storageLocation=None,
+        lastLogin=None,
+        backend=None,
+        subadmin=None,
+        quota=None,
+        email=None,
+        displayname=None,
+        phone=None,
+        address=None,
+        website=None,
+        twitter=None,
+        groups=None,
+        language=None,
+        locale=None,
+        backendCapabilities=None,
+    ):
 
         self.id = id
         self.enabled = bool(enabled)
         self.storage_location = storageLocation
-        if lastLogin=='0' or lastLogin==0:
+        if lastLogin == "0" or lastLogin == 0:
             self.last_login = datetime(1970, 1, 1, 0, 0)
         else:
-            # TODO: add try
-            self.last_login = datetime.fromtimestamp(int(lastLogin)/1e3)
+            try:
+                self.last_login = datetime.fromtimestamp(int(lastLogin) / 1e3)
+            except:
+                self.last_login = datetime(1970, 1, 1, 0, 0)
         self.backend = backend
         # TODO: add check
         self.subadmin = subadmin
@@ -220,45 +258,44 @@ class User(Comparer):
         self.website = website
         self.twitter = twitter
         # TODO: add check
-        self.groups =  groups #!
+        self.groups = groups  #!
         self.language = language
         self.locale = locale
         # TODO: add check
-        self.backend_capabilities = backendCapabilities #!
+        self.backend_capabilities = backendCapabilities  #!
 
     def __str__(self):
-        out='<User> ({id}) "{dn}" enabled: {en}, e-mail: {em}\n'.format(
-            dn=self.displayname,
-            id=self.id,
-            en=self.enabled,
-            em=self.email)
-        out+='\tbackend: {bk}, storage location: {pt}, last logon: {ll}\n'.format(
+        out = '<User> ({id}) "{dn}" enabled: {en}, e-mail: {em}\n'.format(
+            dn=self.displayname, id=self.id, en=self.enabled, em=self.email
+        )
+        out += "\tbackend: {bk}, storage location: {pt}, last logon: {ll}\n".format(
             bk=self.backend,
             pt=self.storage_location,
-            ll=self.last_login.replace(microsecond=0).isoformat()
-            )
-        out+='\tquota: {q}'.format(q=self.quota)
-        out+='\tphone: {ph}, twitter: {tw}, website: {www}\n'.format(
-            ph=self.phone,
-            tw=self.twitter,
-            www=self.website)
-        out+='\taddress: {address}\n'.format_map(self.__dict__)
-        out+='\tlanguage: {language}, locale: {locale}\n'.format_map(
-            self.__dict__)
+            ll=self.last_login.replace(microsecond=0).isoformat(),
+        )
+        out += "\tquota: {q}".format(q=self.quota)
+        out += "\tphone: {ph}, twitter: {tw}, website: {www}\n".format(
+            ph=self.phone, tw=self.twitter, www=self.website
+        )
+        out += "\taddress: {address}\n".format_map(self.__dict__)
+        out += "\tlanguage: {language}, locale: {locale}\n".format_map(
+            self.__dict__
+        )
         for itm in self.groups:
-            if  itm.group_id in self.subadmin:
-                out+='\t'+itm.info+' [Subadmin]\n'
+            if itm.group_id in self.subadmin:
+                out += "\t" + itm.info + " [Subadmin]\n"
             else:
-                out+='\t'+itm.info+'\n'
-        out+='\t{backend}'.format(backend=self.backend_capabilities)
+                out += "\t" + itm.info + "\n"
+        out += "\t{backend}".format(backend=self.backend_capabilities)
         return out
+
 
 class UserQuota(Comparer):
     """
         NextCloud user quota class
     """
 
-    def __init__(self,quota,used=0,free=None, total=None, relative=None):
+    def __init__(self, quota, used=0, free=None, total=None, relative=None):
         try:
             self.quota = int(quota)
         except ValueError as e:
@@ -269,160 +306,243 @@ class UserQuota(Comparer):
         self.relative = relative
 
     def __str__(self):
-        out='Quota: {quota}, used: {used}'.format(
-            quota=human_size(self.quota),
-            used=human_size(self.used))
+        out = "Quota: {quota}, used: {used}".format(
+            quota=human_size(self.quota), used=human_size(self.used)
+        )
         if self.free:
-            out+=', free: {free}'.format(free=human_size(int(self.free)))
+            out += ", free: {free}".format(free=human_size(int(self.free)))
         if self.total:
-            out+=', total: {total}'.format(total=human_size(int(self.total)))
+            out += ", total: {total}".format(total=human_size(int(self.total)))
         if self.relative:
-            out+=', relative: {relative}'.format(relative=self.relative)
-        return out+'\n'
+            out += ", relative: {relative}".format(relative=self.relative)
+        return out + "\n"
+
 
 class BackendCapabilities(Comparer):
     """
         NectCloud BackendCapabilities class
     """
 
-    def __init__(self, setDisplayName=None, setPassword=None ):
+    def __init__(self, setDisplayName=None, setPassword=None):
         self.set_display_name = bool(setPassword)
         self.set_password = bool(setPassword)
 
     def __str__(self):
-        out='<BackendCapabilities> setDisplayName: {dn},  setPassword: {p}'
+        out = "<BackendCapabilities> setDisplayName: {dn},  setPassword: {p}"
         return out.format(dn=self.set_display_name, p=self.set_password)
 
-class Ocs_xml(object):
-    """
-        NextCloud answer parser class.
-    """
-    _SUPPORTED_CLASS_NAMES=['','GroupFolder','Group','CreateGroupFolder',
-        'GroupMembers','User','Apps','Subadmins']
 
-    def __init__(self,xml_text,data_class_name=''):
+class OcsXmlResponse(object):
+    """NextCloud answer parser class."""
 
-        if data_class_name not in self._SUPPORTED_CLASS_NAMES:
-            raise WrongParam("Unsupported class name: {cls}".format(
-                cls=data_class_name))
-        if not isinstance(xml_text,str):
-            raise WrongParam("Invalid xml_text parameter type: {t}".format(
-                t=type(xml_text)))
+    _SUPPORTED_CLASS_NAMES = [
+        "GroupFolder",
+        "Group",
+        "CreateGroupFolder",
+        "GroupMembers",
+        "User",
+        "Apps",
+        "Subadmins",
+    ]
+
+    def __init__(self, xml_text, data_class_name=None):
+        """Parsing xml response NextCloud server.
+
+        Args:
+            xml_text (str): XML string from NextCloud server.
+            data_class_name (str): Allows you to determine the content type of
+                the response.
+
+        Raises:
+            WrongParam: The instance parameter is not of the correct
+            type.
+
+        """
+        if (
+            data_class_name is not None
+            and data_class_name not in self._SUPPORTED_CLASS_NAMES
+        ):
+            raise WrongParam(
+                "Unsupported class name: {cls}".format(cls=data_class_name)
+            )
+        if not isinstance(xml_text, str):
+            raise WrongParam(
+                "Invalid xml_text parameter type: {t}".format(t=type(xml_text))
+            )
         try:
-            self.respose=ET.fromstring(xml_text)
+            self.respose = ET.fromstring(xml_text)
         except ParseError as e:
-            raise WrongParam("Invalid xml_text parameter value. XML Parse Error.")
-        self.status=self.respose.find(".//meta/status").text \
-            if self.respose.find(".//meta/status") is not None else 'unknown'
-        self.statuscode=self.respose.find(".//meta/statuscode").text \
-            if self.respose.find(".//meta/statuscode") is not None else 'unknown'
-        self.message=self.respose.find(".//meta/message").text \
-            if self.respose.find(".//meta/message") is not None else 'unknown'
+            raise WrongParam(
+                "Invalid xml_text parameter value. XML Parse Error."
+            )
+        self.status = (
+            self.respose.find(".//meta/status").text
+            if self.respose.find(".//meta/status") is not None
+            else "unknown"
+        )
+        self.statuscode = (
+            self.respose.find(".//meta/statuscode").text
+            if self.respose.find(".//meta/statuscode") is not None
+            else "unknown"
+        )
+        self.message = (
+            self.respose.find(".//meta/message").text
+            if self.respose.find(".//meta/message") is not None
+            else "unknown"
+        )
 
-        self.data_class_name=data_class_name
-        if self.statuscode!='100':
+        self.data_class_name = data_class_name
+        if self.statuscode != "100":
             return
-        self.data=[]
-        if data_class_name == 'GroupFolder':
-            data=self.respose.findall(".//data/element")
-            if data:
-                for element in data:
-                    gf={}
-                    for subelement in element.getchildren():
-                        sub=subelement.getchildren()
-                        #print('SUB',sub)
-                        groups=[]
-                        if sub:
-                            for se in sub:
-                                groups.append( Group( **se.attrib ) )
-                            gf['groups']=groups
-                        else:
-                            gf[subelement.tag]=subelement.text
-                    self.data.append( GroupFolder(**gf) )
-            else:
-                data=self.respose.find(".//data")
-                gf={}
-                for subelement in data:
-                    sub=subelement.getchildren()
-                    groups=[]
-                    if sub:
-                        for se in sub:
-                            groups.append( Group( **se.attrib ) )
-                        gf['groups']=groups
-                    else:
-                        gf[subelement.tag]=subelement.text
-                self.data.append( GroupFolder(**gf) )
 
-        elif data_class_name == 'Group':
-            data=self.respose.findall(".//data/groups/element")
+        parser = self.get_parser(data_class_name)
+        if parser is not None:
+            self.data = parser(self.respose)
+        else:
+            self.data = []
+
+    @staticmethod
+    def get_parser(data_class_name):
+        if data_class_name == "GroupFolder":
+            return OcsXmlResponse._parse_group_folder
+        elif data_class_name == "Group":
+            return OcsXmlResponse._parse_group
+        elif data_class_name == "CreateGroupFolder":
+            return OcsXmlResponse._parse_create_group_folder
+        elif data_class_name == "GroupMembers":
+            return OcsXmlResponse._parse_group_members
+        elif data_class_name == "User":
+            return OcsXmlResponse._parse_user
+        elif data_class_name == "Apps":
+            return OcsXmlResponse._parse_apps
+        elif data_class_name == "Subadmins":
+            return OcsXmlResponse._parse_subadmins
+
+    @staticmethod
+    def _parse_group_folder(et_object):
+        result = []
+        data = et_object.findall(".//data/element")
+        if data:
             for element in data:
-                self.data.append( Group(group_id=element.text) )
-        elif data_class_name == 'CreateGroupFolder':
-            data=self.respose.findall(".//data/id")
-            self.data.append( CreateGroupFolder(id=data[0].text) )
-        elif data_class_name == 'GroupMembers':
-            data=self.respose.findall(".//data/users/element")
-            for element in data:
-                self.data.append( GroupMembers(user_id=element.text) )
-        elif data_class_name == 'User':
-            data=self.respose.find(".//data")
-            usr={}
+                group_folder = {}
+                for subelement in element.getchildren():
+                    sub = subelement.getchildren()
+                    groups = []
+                    if sub:
+                        for item in sub:
+                            groups.append(Group(**item.attrib))
+                        group_folder["groups"] = groups
+                    else:
+                        group_folder[subelement.tag] = subelement.text
+                result.append(GroupFolder(**group_folder))
+        else:
+            data = et_object.find(".//data")
+            group_folder = {}
             for subelement in data:
-                sub=subelement.getchildren()
-                groups=[]
-                if subelement.tag=='groups':
-                    for se in sub:
-                        groups.append( Group( group_id=se.text) )
-                    usr['groups']=groups
-                elif subelement.tag=='quota':
-                    qu={}
-                    for se in sub:
-                        qu[se.tag] =se.text
-                    usr['quota']=UserQuota(**qu)
-                elif subelement.tag=='subadmin':
-                    subadmins=[]
-                    for se in sub:
-                        subadmins.append(se.text)
-                    usr['subadmin']=subadmins
-                elif subelement.tag=='backendCapabilities':
-                    be={}
-                    for se in sub:
-                        be[se.tag] =se.text
-                    usr['backendCapabilities']=BackendCapabilities(**be)
+                sub = subelement.getchildren()
+                groups = []
+                if sub:
+                    for item in sub:
+                        groups.append(Group(**item.attrib))
+                    group_folder["groups"] = groups
                 else:
-                    usr[subelement.tag]=subelement.text
-            self.data.append( User(**usr) )
-        elif data_class_name == 'Apps':
-            data=self.respose.findall(".//data/apps/element")
-            for element in data:
-                self.data.append( element.text )
-        elif data_class_name == 'Subadmins':
-            data=self.respose.findall(".//data/element")
-            for element in data:
-                self.data.append( element.text )
-        elif data_class_name == '':
-            pass
+                    group_folder[subelement.tag] = subelement.text
+            result.append(GroupFolder(**group_folder))
+        return result
+
+    @staticmethod
+    def _parse_group(et_object):
+        result = []
+        data = et_object.findall(".//data/groups/element")
+        for element in data:
+            result.append(Group(group_id=element.text))
+        return result
+
+    @staticmethod
+    def _parse_create_group_folder(et_object):
+        result = []
+        data = et_object.findall(".//data/id")
+        result.append(CreateGroupFolder(id=data[0].text))
+        return result
+
+    @staticmethod
+    def _parse_group_members(et_object):
+        result = []
+        data = et_object.findall(".//data/users/element")
+        for element in data:
+            result.append(GroupMembers(user_id=element.text))
+        return result
+
+    @staticmethod
+    def _parse_user(et_object):
+        result = []
+        data = et_object.find(".//data")
+        user = {}
+        for subelement in data:
+            sub = subelement.getchildren()
+            groups = []
+            if subelement.tag == "groups":
+                for item in sub:
+                    groups.append(Group(group_id=item.text))
+                user["groups"] = groups
+            elif subelement.tag == "quota":
+                quota = {}
+                for item in sub:
+                    quota[item.tag] = item.text
+                user["quota"] = UserQuota(**quota)
+            elif subelement.tag == "subadmin":
+                subadmins = []
+                for item in sub:
+                    subadmins.append(item.text)
+                user["subadmin"] = subadmins
+            elif subelement.tag == "backendCapabilities":
+                backend = {}
+                for item in sub:
+                    backend[item.tag] = item.text
+                user["backendCapabilities"] = BackendCapabilities(**backend)
+            else:
+                user[subelement.tag] = subelement.text
+        result.append(User(**user))
+        return result
+
+    @staticmethod
+    def _parse_apps(et_object):
+        result = []
+        data = et_object.findall(".//data/apps/element")
+        for element in data:
+            result.append(element.text)
+        return result
+
+    @staticmethod
+    def _parse_subadmins(et_object):
+        result = []
+        data = et_object.findall(".//data/element")
+        for element in data:
+            result.append(element.text)
+        return result
 
     def get_status(self):
         return "Status: {s}, code: {c}, message: {m}".format(
-                s=self.status, c=self.statuscode, m=self.message)
+            s=self.status, c=self.statuscode, m=self.message
+        )
 
     def __str__(self):
-        out=u"<Ocs_xml> {status} ({code}): {msg}\n".format(status=self.status,
-                                code=self.statuscode,
-                                msg=self.message)
+        out = "<OcsXmlResponse> {status} ({code}): {msg}\n".format(
+            status=self.status, code=self.statuscode, msg=self.message
+        )
         for d in self.data:
-            out+=u'{data}\n'.format(data=d.__str__())
+            out += "{data}\n".format(data=d.__str__())
         return out
+
 
 class GroupFolderMixin(object):
     """
         GroupFolder Mixin for Ocs class
     """
 
-    URL_FOLDERS         = 'index.php/apps/groupfolders/folders'
+    URL_FOLDERS = "index.php/apps/groupfolders/folders"
 
-    def set_group_folder_quota(self, gfolder_id,quota_bites):
+    def set_group_folder_quota(self, gfolder_id, quota_bites):
         """Set quota for group folder.
 
         Sets a quota for the specified group folder.
@@ -435,21 +555,26 @@ class GroupFolderMixin(object):
         Raises:
             OperationFailure: The operation failed.
         """
-        resp=self.post_data(self.URL_FOLDERS+u'/{gfolder_id}/quota'.format(
-                            gfolder_id=gfolder_id),
-                            {u'quota':quota_bites})
-        x=Ocs_xml(resp)
-        if x.statuscode!='100':
+        resp = self.post_data(
+            self.URL_FOLDERS
+            + "/{gfolder_id}/quota".format(gfolder_id=gfolder_id),
+            {"quota": quota_bites},
+        )
+        x = OcsXmlResponse(resp)
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'An exception was caught in Ocs.set_group_folder_quota due to '+
-                'negative server response code: {q}'.format(
-                q=x.get_status()))
+                "An exception was caught in Ocs.set_group_folder_quota due to "
+                + "negative server response code: {q}".format(q=x.get_status())
+            )
             raise OperationFailure(
-                u'Ocs.set_group_folder_quota response:{e}'.format(
-                e=x.get_status()))
+                "Ocs.set_group_folder_quota response:{e}".format(
+                    e=x.get_status()
+                )
+            )
 
-    def set_group_folder_group_permissions(self, gfolder_id, group_id,
-                permissions):
+    def set_group_folder_group_permissions(
+        self, gfolder_id, group_id, permissions
+    ):
         """Set permissions for group folder per group.
 
         Sets permissions for the specified group folder for this group.
@@ -468,19 +593,26 @@ class GroupFolderMixin(object):
         Raises:
             OperationFailure: The operation failed.
         """
-        resp=self.post_data(self.URL_FOLDERS+
-                    u'/{gfolder_id}/groups/{group_id}'.format(
-                        gfolder_id=gfolder_id,group_id=group_id),
-                    {u'permissions':permissions})
-        x=Ocs_xml(resp)
-        if x.statuscode!='100':
+        resp = self.post_data(
+            self.URL_FOLDERS
+            + "/{gfolder_id}/groups/{group_id}".format(
+                gfolder_id=gfolder_id, group_id=group_id
+            ),
+            {"permissions": permissions},
+        )
+        x = OcsXmlResponse(resp)
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'An exception was caught in Ocs.set_group_folder_group_permissions'+
-                ' due to negative server response code: {q}'.format(
-                q=x.get_status()))
+                "An exception was caught in Ocs.set_group_folder_group_permissions"
+                + " due to negative server response code: {q}".format(
+                    q=x.get_status()
+                )
+            )
             raise OperationFailure(
-                u'Ocs.set_group_folder_group_permissions response:{e}'.format(
-                e=x.get_status()))
+                "Ocs.set_group_folder_group_permissions response:{e}".format(
+                    e=x.get_status()
+                )
+            )
 
     def grant_access_to_group_folder(self, gfolder_id, group_id):
         """Grant access to the group folder for the group.
@@ -494,19 +626,24 @@ class GroupFolderMixin(object):
         Raises:
             OperationFailure: The operation failed.
         """
-        resp=self.post_data(self.URL_FOLDERS+
-                    u'/{gfolder_id}/groups'.format(
-                        gfolder_id=gfolder_id),
-                    {u'group':group_id})
-        x=Ocs_xml(resp)
-        if x.statuscode!='100':
+        resp = self.post_data(
+            self.URL_FOLDERS
+            + "/{gfolder_id}/groups".format(gfolder_id=gfolder_id),
+            {"group": group_id},
+        )
+        x = OcsXmlResponse(resp)
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'An exception was caught in Ocs.grant_access_to_group_folder'+
-                ' due to negative server response code: {q}'.format(
-                q=x.get_status()))
+                "An exception was caught in Ocs.grant_access_to_group_folder"
+                + " due to negative server response code: {q}".format(
+                    q=x.get_status()
+                )
+            )
             raise OperationFailure(
-                u'Ocs.grant_access_to_group_folder response:{e}'.format(
-                e=x.get_status()))
+                "Ocs.grant_access_to_group_folder response:{e}".format(
+                    e=x.get_status()
+                )
+            )
 
     def revoke_access_to_group_folder(self, gfolder_id, group_id):
         """Revoke group folder access for group.
@@ -520,21 +657,28 @@ class GroupFolderMixin(object):
         Raises:
             OperationFailure: The operation failed.
         """
-        resp=self.delete_data(self.URL_FOLDERS +
-                    u'/{gfolder_id}/groups/{group_id}'.format(
-                        group_id=group_id,gfolder_id=gfolder_id),
-                            {})
-        x=Ocs_xml(resp)
-        if x.statuscode!='100':
+        resp = self.delete_data(
+            self.URL_FOLDERS
+            + "/{gfolder_id}/groups/{group_id}".format(
+                group_id=group_id, gfolder_id=gfolder_id
+            ),
+            {},
+        )
+        x = OcsXmlResponse(resp)
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'An exception was caught in Ocs.revoke_access_to_group_folder'+
-                ' due to negative server response code: {q}'.format(
-                q=x.get_status()))
+                "An exception was caught in Ocs.revoke_access_to_group_folder"
+                + " due to negative server response code: {q}".format(
+                    q=x.get_status()
+                )
+            )
             raise OperationFailure(
-                u'Ocs.revoke_access_to_group_folder response:{e}'.format(
-                e=x.get_status()))
+                "Ocs.revoke_access_to_group_folder response:{e}".format(
+                    e=x.get_status()
+                )
+            )
 
-    def rename_group_folder(self,gfolder_id, new_name):
+    def rename_group_folder(self, gfolder_id, new_name):
         """Rename group folder.
 
         Renames the specified group folder.
@@ -546,21 +690,24 @@ class GroupFolderMixin(object):
         Raises:
             OperationFailure: The operation failed.
         """
-        resp=self.post_data(self.URL_FOLDERS+
-                    u'/{gfolder_id}/mountpoint'.format(
-                        gfolder_id=gfolder_id),
-                    {u'mountpoint':new_name})
-        x=Ocs_xml(resp)
-        if x.statuscode!='100':
+        resp = self.post_data(
+            self.URL_FOLDERS
+            + "/{gfolder_id}/mountpoint".format(gfolder_id=gfolder_id),
+            {"mountpoint": new_name},
+        )
+        x = OcsXmlResponse(resp)
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'An exception was caught in Ocs.rename_group_folder'+
-                ' due to negative server response code: {q}'.format(
-                q=x.get_status()))
+                "An exception was caught in Ocs.rename_group_folder"
+                + " due to negative server response code: {q}".format(
+                    q=x.get_status()
+                )
+            )
             raise OperationFailure(
-                u'Ocs.rename_group_folder response:{e}'.format(
-                e=x.get_status()))
+                "Ocs.rename_group_folder response:{e}".format(e=x.get_status())
+            )
 
-    def new_group_folder(self,mountpoint):
+    def new_group_folder(self, mountpoint):
         """Create a group folder.
 
         Creates the specified group folder.
@@ -574,19 +721,21 @@ class GroupFolderMixin(object):
         Raises:
             OperationFailure: The operation failed.
         """
-        resp=self.post_data(self.URL_FOLDERS, {u'mountpoint':mountpoint})
-        x=Ocs_xml(resp,data_class_name='CreateGroupFolder')
-        if x.statuscode!='100':
+        resp = self.post_data(self.URL_FOLDERS, {"mountpoint": mountpoint})
+        x = OcsXmlResponse(resp, data_class_name="CreateGroupFolder")
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'An exception was caught in Ocs.new_group_folder'+
-                ' due to negative server response code: {q}'.format(
-                q=x.get_status()))
+                "An exception was caught in Ocs.new_group_folder"
+                + " due to negative server response code: {q}".format(
+                    q=x.get_status()
+                )
+            )
             raise OperationFailure(
-                u'Ocs.new_group_folder response:{e}'.format(
-                e=x.get_status()))
+                "Ocs.new_group_folder response:{e}".format(e=x.get_status())
+            )
         return x.data[0].id
 
-    def remove_group_folder(self,gfolder_id):
+    def remove_group_folder(self, gfolder_id):
         """Deletes a group folder.
 
         Deletes the specified group folder. The operation can not be canceled!
@@ -597,17 +746,21 @@ class GroupFolderMixin(object):
         Raises:
             OperationFailure: The operation failed.
         """
-        resp=self.delete_data(self.URL_FOLDERS + u'/{gfolder_id}'.format(
-                        gfolder_id=gfolder_id), {})
-        x=Ocs_xml(resp)
-        if x.statuscode!='100':
+        resp = self.delete_data(
+            self.URL_FOLDERS + "/{gfolder_id}".format(gfolder_id=gfolder_id),
+            {},
+        )
+        x = OcsXmlResponse(resp)
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'An exception was caught in Ocs.remove_group_folder'+
-                ' due to negative server response code: {q}'.format(
-                q=x.get_status()))
+                "An exception was caught in Ocs.remove_group_folder"
+                + " due to negative server response code: {q}".format(
+                    q=x.get_status()
+                )
+            )
             raise OperationFailure(
-                u'Ocs.remove_group_folder response:{e}'.format(
-                e=x.get_status()))
+                "Ocs.remove_group_folder response:{e}".format(e=x.get_status())
+            )
 
     def get_group_folders(self):
         """Group Folders
@@ -620,16 +773,18 @@ class GroupFolderMixin(object):
         Raises:
             OperationFailure: The operation failed.
         """
-        resp=self.get_data(self.URL_FOLDERS)
-        x=Ocs_xml(resp,'GroupFolder')
-        if x.statuscode!='100':
+        resp = self.get_data(self.URL_FOLDERS)
+        x = OcsXmlResponse(resp, "GroupFolder")
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'An exception was caught in Ocs.get_group_folders'+
-                ' due to negative server response code: {q}'.format(
-                q=x.get_status()))
+                "An exception was caught in Ocs.get_group_folders"
+                + " due to negative server response code: {q}".format(
+                    q=x.get_status()
+                )
+            )
             raise OperationFailure(
-                u'Ocs.get_group_folders response:{e}'.format(
-                e=x.get_status()))
+                "Ocs.get_group_folders response:{e}".format(e=x.get_status())
+            )
         return x.data
 
     def get_group_folder(self, gfolder_id):
@@ -646,19 +801,21 @@ class GroupFolderMixin(object):
         Raises:
             OperationFailure: The operation failed.
         """
-        resp=self.get_data(self.URL_FOLDERS+u'/{id}'.format(id=gfolder_id))
-        x=Ocs_xml(resp,'GroupFolder')
-        if x.statuscode!='100':
+        resp = self.get_data(self.URL_FOLDERS + "/{id}".format(id=gfolder_id))
+        x = OcsXmlResponse(resp, "GroupFolder")
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'An exception was caught in Ocs.get_group_folder'+
-                ' due to negative server response code: {q}'.format(
-                q=x.get_status()))
+                "An exception was caught in Ocs.get_group_folder"
+                + " due to negative server response code: {q}".format(
+                    q=x.get_status()
+                )
+            )
             raise OperationFailure(
-                u'Ocs.get_group_folder response:{e}'.format(
-                e=x.get_status()))
+                "Ocs.get_group_folder response:{e}".format(e=x.get_status())
+            )
         return x.data[0]
 
-    def batch_new_group_folder(self,group_folder_obj):
+    def batch_new_group_folder(self, group_folder_obj):
         """Batch create group folder.
 
         Creates a group folder, creates all groups from a group folder instance,
@@ -674,70 +831,87 @@ class GroupFolderMixin(object):
         Raises:
             OperationFailure: The operation failed.
         """
-        Ocs.logger.info('Batch create group folder.')
+        Ocs.logger.info("Batch create group folder.")
 
-        Ocs.logger.info('Creates a group folder {mp}.'.format(
-            mp=group_folder_obj.mount_point))
+        Ocs.logger.info(
+            "Creates a group folder {mp}.".format(
+                mp=group_folder_obj.mount_point
+            )
+        )
         try:
-            #1 folder
-            fid=self.new_group_folder(group_folder_obj.mount_point)
-            group_folder_obj.id=fid
-            Ocs.logger.debug('Created group folder {mp}.'.format(
-                mp=group_folder_obj))
+            # 1 folder
+            fid = self.new_group_folder(group_folder_obj.mount_point)
+            group_folder_obj.id = fid
+            Ocs.logger.debug(
+                "Created group folder {mp}.".format(mp=group_folder_obj)
+            )
 
             for grp in group_folder_obj.groups:
 
-                #2 add group
-                Ocs.logger.debug('Create a group {mp}.'.format(
-                    mp=grp.group_id))
+                # 2 add group
+                Ocs.logger.debug(
+                    "Create a group {mp}.".format(mp=grp.group_id)
+                )
                 self.new_group(grp.group_id)
 
-                #3 add permissions
-                Ocs.logger.debug('Add group {g} permissions {r} '.format(
-                    g=grp.group_id, r=grp.permissions)+
-                    'to group folder {p} ({id}).'.format(
-                    p=group_folder_obj.mount_point,
-                    id=group_folder_obj.id))
-                self.set_group_folder_group_permissions(group_folder_obj.id,
-                    grp.group_id,grp.permissions)
+                # 3 add permissions
+                Ocs.logger.debug(
+                    "Add group {g} permissions {r} ".format(
+                        g=grp.group_id, r=grp.permissions
+                    )
+                    + "to group folder {p} ({id}).".format(
+                        p=group_folder_obj.mount_point, id=group_folder_obj.id
+                    )
+                )
+                self.set_group_folder_group_permissions(
+                    group_folder_obj.id, grp.group_id, grp.permissions
+                )
 
-                #4 link group
-                Ocs.logger.debug('Grants group {g} access'.format(
-                    g=grp.group_id)
-                    +' to the group folder {p} ({id}).'.format(
-                    p=group_folder_obj.mount_point,
-                    id=group_folder_obj.id))
-                self.grant_access_to_group_folder(group_folder_obj.id,
-                    grp.group_id)
+                # 4 link group
+                Ocs.logger.debug(
+                    "Grants group {g} access".format(g=grp.group_id)
+                    + " to the group folder {p} ({id}).".format(
+                        p=group_folder_obj.mount_point, id=group_folder_obj.id
+                    )
+                )
+                self.grant_access_to_group_folder(
+                    group_folder_obj.id, grp.group_id
+                )
 
-            #5 add quota
-            Ocs.logger.debug('Sets the quota {q}'.format(
-                q=group_folder_obj.quota)
-                +' to the group folder {p} ({id}).'.format(
-                p=group_folder_obj.mount_point,
-                id=group_folder_obj.id))
-            self.set_group_folder_quota(group_folder_obj.id,group_folder_obj.quota)
+            # 5 add quota
+            Ocs.logger.debug(
+                "Sets the quota {q}".format(q=group_folder_obj.quota)
+                + " to the group folder {p} ({id}).".format(
+                    p=group_folder_obj.mount_point, id=group_folder_obj.id
+                )
+            )
+            self.set_group_folder_quota(
+                group_folder_obj.id, group_folder_obj.quota
+            )
         except OperationFailure as e:
             Ocs.logger.exception(
-                'Exception in Ocs.batch_new_group_folder {e}'.format(
-                e=e.value))
+                "Exception in Ocs.batch_new_group_folder {e}".format(e=e.value)
+            )
+
 
 class Base(object):
     pass
+
 
 class Ocs(Base):
     """
         Class wrapper over ocs.
         Dynamically expandable class.
     """
-    URL_GROUPS          = 'ocs/v1.php/cloud/groups'
-    URL_USERS           = 'ocs/v1.php/cloud/users'
-    URL_USER_SEARCH     = 'ocs/v1.php/cloud/users?search='
-    URL_APPS            = 'ocs/v1.php/cloud/apps'
 
-    logger              = logging.getLogger('ocs')
+    URL_GROUPS = "ocs/v1.php/cloud/groups"
+    URL_USERS = "ocs/v1.php/cloud/users"
+    URL_USER_SEARCH = "ocs/v1.php/cloud/users?search="
+    URL_APPS = "ocs/v1.php/cloud/apps"
 
-    def __init__(self,cloud_user,cloud_user_pwd,cloud_URL):
+    logger = logging.getLogger("ocs")
+
+    def __init__(self, cloud_user, cloud_user_pwd, cloud_URL):
         """Constructor.
 
         Args:
@@ -750,36 +924,37 @@ class Ocs(Base):
             OperationFailure: The operation failed.
         """
         if not cloud_user:
-            raise OperationFailure(u'Not specified value cloud_user.')
+            raise OperationFailure("Not specified value cloud_user.")
         else:
-            self.cl_user=cloud_user
+            self.cl_user = cloud_user
 
         if not cloud_user_pwd:
-            raise OperationFailure(u'Not specified value cloud_user_pwd.')
+            raise OperationFailure("Not specified value cloud_user_pwd.")
         else:
-            self.cl_user_pwd=cloud_user_pwd
+            self.cl_user_pwd = cloud_user_pwd
 
         if not cloud_URL:
-            raise  OperationFailure(u'Not specified value cloud_URL.')
+            raise OperationFailure("Not specified value cloud_URL.")
         else:
-            self.cloud_url=urlparse(cloud_URL)
+            self.cloud_url = urlparse(cloud_URL)
 
-        self.headers={"OCS-APIRequest": "true"}
+        self.headers = {"OCS-APIRequest": "true"}
 
         self.client = requests.session()
 
-        self._apps=self.get_apps()
-        self._apps.append('ocs')
+        self._apps = self.get_apps()
+        self._apps.append("ocs")
 
-        available_classes=set(CLS_MAP.keys())
-        to_mix=set(self._apps).intersection(available_classes)
+        available_classes = set(CLS_MAP.keys())
+        to_mix = set(self._apps).intersection(available_classes)
         if to_mix:
-            reMix=tuple(getattr(sys.modules[__name__], class_name) \
-                for class_name in (CLS_MAP[x] for x in to_mix ) )
-            self.__class__ = type('Ocsm', reMix ,{})
+            reMix = tuple(
+                getattr(sys.modules[__name__], class_name)
+                for class_name in (CLS_MAP[x] for x in to_mix)
+            )
+            self.__class__ = type("OcsMix", reMix, {})
 
-
-    def get_data(self,url_path):
+    def get_data(self, url_path):
         """Run a GET request to the cloud.
 
         Performs a GET request to the cloud on a partial path (without the base
@@ -795,25 +970,31 @@ class Ocs(Base):
             OperationFailure: The operation failed.
         """
         try:
-            url=urljoin(self.cloud_url.geturl(),url_path)
-            Ocs.logger.debug('Trying to execute a GET request: {q}'.format(
-                q=url))
-            self.client.get( url )
-            response = requests.get(url,
-                            auth=requests.auth.HTTPBasicAuth(
-                              self.cl_user,
-                              self.cl_user_pwd),
-                            headers=self.headers)
-            Ocs.logger.debug('Server response received: {q}'.format(
-                q=response.text))
+            url = urljoin(self.cloud_url.geturl(), url_path)
+            Ocs.logger.debug(
+                "Trying to execute a GET request: {q}".format(q=url)
+            )
+            self.client.get(url)
+            response = requests.get(
+                url,
+                auth=requests.auth.HTTPBasicAuth(
+                    self.cl_user, self.cl_user_pwd
+                ),
+                headers=self.headers,
+            )
+            Ocs.logger.debug(
+                "Server response received: {q}".format(q=response.text)
+            )
             return response.text
         except IOError as e:
             Ocs.logger.exception(
-                'Intercepted exception in Ocs.get_data: {q}. Escalate.'.format(
-                q=e))
-            raise  OperationFailure(u'Ocs.get_data error:{e}'.format(e=e))
+                "Intercepted exception in Ocs.get_data: {q}. Escalate.".format(
+                    q=e
+                )
+            )
+            raise OperationFailure("Ocs.get_data error:{e}".format(e=e))
 
-    def post_data(self,url_path, data_js):
+    def post_data(self, url_path, data_js):
         """Run a POST request to the cloud.
 
         Performs a POST request to the cloud on a partial path (without the base
@@ -829,29 +1010,33 @@ class Ocs(Base):
         Raises:
             OperationFailure: The operation failed.
         """
-##        header_add={'Content-Type':'application/x-www-form-urlencoded'}
-##        headers= deepcopy( self.headers )
-##        headers.update(header_add)
+        ##        header_add={'Content-Type':'application/x-www-form-urlencoded'}
+        ##        headers= deepcopy( self.headers )
+        ##        headers.update(header_add)
         try:
-            url=urljoin(self.cloud_url.geturl(),url_path)
-            Ocs.logger.debug('Trying to execute a POST request: '+
-                '{q}, payload: {d}'.format(
-                q=url,d=data_js))
-            response = requests.post(url,
-                            json=data_js,
-                            auth=requests.auth.HTTPBasicAuth(
-                              self.cl_user,
-                              self.cl_user_pwd),
-                            headers=self.headers)
-            Ocs.logger.debug('Server response received: {q}'.format(
-                q=response.text))
+            url = urljoin(self.cloud_url.geturl(), url_path)
+            Ocs.logger.debug(
+                "Trying to execute a POST request: "
+                + "{q}, payload: {d}".format(q=url, d=data_js)
+            )
+            response = requests.post(
+                url,
+                json=data_js,
+                auth=requests.auth.HTTPBasicAuth(
+                    self.cl_user, self.cl_user_pwd
+                ),
+                headers=self.headers,
+            )
+            Ocs.logger.debug(
+                "Server response received: {q}".format(q=response.text)
+            )
             return response.text
         except IOError as e:
             Ocs.logger.exception(
-                'Intercepted exception in Ocs.post_data:'+
-                ' {q}. Escalate.'.format(
-                q=e))
-            raise  OperationFailure(u'Ocs.post_data error:{e}'.format(e=e))
+                "Intercepted exception in Ocs.post_data:"
+                + " {q}. Escalate.".format(q=e)
+            )
+            raise OperationFailure("Ocs.post_data error:{e}".format(e=e))
 
     def delete_data(self, url_path, data_js={}):
         """Run a DELETE request to the cloud.
@@ -870,25 +1055,29 @@ class Ocs(Base):
             OperationFailure: The operation failed.
         """
         try:
-            url=urljoin(self.cloud_url.geturl(),url_path)
-            Ocs.logger.debug('Trying to execute a DELETE request: '+
-                '{q}, payload: {d}'.format(
-                q=url,d=data_js))
-            response = requests.delete(url,
-                            json=data_js,
-                            auth=requests.auth.HTTPBasicAuth(
-                              self.cl_user,
-                              self.cl_user_pwd),
-                            headers=self.headers)
-            Ocs.logger.debug('Server response received: {q}'.format(
-                q=response.text))
+            url = urljoin(self.cloud_url.geturl(), url_path)
+            Ocs.logger.debug(
+                "Trying to execute a DELETE request: "
+                + "{q}, payload: {d}".format(q=url, d=data_js)
+            )
+            response = requests.delete(
+                url,
+                json=data_js,
+                auth=requests.auth.HTTPBasicAuth(
+                    self.cl_user, self.cl_user_pwd
+                ),
+                headers=self.headers,
+            )
+            Ocs.logger.debug(
+                "Server response received: {q}".format(q=response.text)
+            )
             return response.text
         except IOError as e:
             Ocs.logger.exception(
-                'Intercepted exception in Ocs.delete_data:'+
-                ' {q}. Escalate.'.format(
-                q=e))
-            raise  OperationFailure(u'Ocs.delete_data error:{e}'.format(e=e))
+                "Intercepted exception in Ocs.delete_data:"
+                + " {q}. Escalate.".format(q=e)
+            )
+            raise OperationFailure("Ocs.delete_data error:{e}".format(e=e))
 
     def put_data(self, url_path, data_js={}):
         """Run a PUT request to the cloud.
@@ -906,29 +1095,33 @@ class Ocs(Base):
         Raises:
             OperationFailure: The operation failed.
         """
-        header_add={'Content-Type':'application/x-www-form-urlencoded'}
-        headers= deepcopy( self.headers )
+        header_add = {"Content-Type": "application/x-www-form-urlencoded"}
+        headers = deepcopy(self.headers)
         headers.update(header_add)
         try:
-            url=urljoin(self.cloud_url.geturl(),url_path)
-            Ocs.logger.debug('Trying to execute a PUT request: '+
-                '{q}, payload: {d}'.format(
-                q=url,d=data_js))
-            response = requests.put(url,
-                            data=data_js,
-                            auth=requests.auth.HTTPBasicAuth(
-                              self.cl_user,
-                              self.cl_user_pwd),
-                            headers=headers)
-            Ocs.logger.debug('Server response received: {q}'.format(
-                q=response.text))
+            url = urljoin(self.cloud_url.geturl(), url_path)
+            Ocs.logger.debug(
+                "Trying to execute a PUT request: "
+                + "{q}, payload: {d}".format(q=url, d=data_js)
+            )
+            response = requests.put(
+                url,
+                data=data_js,
+                auth=requests.auth.HTTPBasicAuth(
+                    self.cl_user, self.cl_user_pwd
+                ),
+                headers=headers,
+            )
+            Ocs.logger.debug(
+                "Server response received: {q}".format(q=response.text)
+            )
             return response.text
         except IOError as e:
             Ocs.logger.exception(
-                'Intercepted exception in Ocs.put_data:'+
-                ' {q}. Escalate.'.format(
-                q=e))
-            raise  OperationFailure(u'Ocs.put_data error:{e}'.format(e=e))
+                "Intercepted exception in Ocs.put_data:"
+                + " {q}. Escalate.".format(q=e)
+            )
+            raise OperationFailure("Ocs.put_data error:{e}".format(e=e))
 
     def get_apps(self):
         """Applications.
@@ -941,16 +1134,18 @@ class Ocs(Base):
         Raises:
             OperationFailure: The operation failed.
         """
-        resp=self.get_data(self.URL_APPS)
-        x=Ocs_xml(resp,'Apps')
-        if x.statuscode!='100':
+        resp = self.get_data(self.URL_APPS)
+        x = OcsXmlResponse(resp, "Apps")
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'Fire exeption Ocs.get_groups'+
-                ' due to negative server response code: {q}'.format(
-                q=x.get_status()))
+                "Fire exeption Ocs.get_groups"
+                + " due to negative server response code: {q}".format(
+                    q=x.get_status()
+                )
+            )
             raise OperationFailure(
-                u'Ocs.get_groups response:{e}'.format(
-                e=x.get_status()))
+                "Ocs.get_groups response:{e}".format(e=x.get_status())
+            )
         return x.data
 
     def get_groups(self):
@@ -964,16 +1159,18 @@ class Ocs(Base):
         Raises:
             OperationFailure: The operation failed.
         """
-        resp=self.get_data(self.URL_GROUPS)
-        x=Ocs_xml(resp,'Group')
-        if x.statuscode!='100':
+        resp = self.get_data(self.URL_GROUPS)
+        x = OcsXmlResponse(resp, "Group")
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'An exception was caught in Ocs.get_groups'+
-                ' due to negative server response code: {q}'.format(
-                q=x.get_status()))
+                "An exception was caught in Ocs.get_groups"
+                + " due to negative server response code: {q}".format(
+                    q=x.get_status()
+                )
+            )
             raise OperationFailure(
-                u'Ocs.get_groups response:{e}'.format(
-                e=x.get_status()))
+                "Ocs.get_groups response:{e}".format(e=x.get_status())
+            )
         return x.data
 
     def add_user_to_group(self, user_id, group_id):
@@ -989,16 +1186,19 @@ class Ocs(Base):
         Raises:
             OperationFailure: The operation failed.
         """
-        resp=self.post_data(self.URL_USERS +u'/{user_id}/groups'.format(
-                user_id=user_id), {u'groupid':group_id})
-        x=Ocs_xml(resp)
-        if x.statuscode!='100':
+        resp = self.post_data(
+            self.URL_USERS + "/{user_id}/groups".format(user_id=user_id),
+            {"groupid": group_id},
+        )
+        x = OcsXmlResponse(resp)
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'An exception was caught in Ocs.add_user_to_group due to '+
-                'negative server response code: {q}'.format(
-                q=x.get_status()))
-            raise OperationFailure(u'Ocs.add_user_to_group response:{e}'.format(
-                e=x.get_status()))
+                "An exception was caught in Ocs.add_user_to_group due to "
+                + "negative server response code: {q}".format(q=x.get_status())
+            )
+            raise OperationFailure(
+                "Ocs.add_user_to_group response:{e}".format(e=x.get_status())
+            )
 
     def remove_user_from_group(self, user_id, group_id):
         """Remove user from group.
@@ -1013,17 +1213,21 @@ class Ocs(Base):
         Raises:
             OperationFailure: The operation failed.
         """
-        resp=self.delete_data(self.URL_USERS +u'/{user_id}/groups'.format(
-                user_id=user_id), {u'groupid': group_id})
-        x=Ocs_xml(resp)
-        if x.statuscode!='100':
+        resp = self.delete_data(
+            self.URL_USERS + "/{user_id}/groups".format(user_id=user_id),
+            {"groupid": group_id},
+        )
+        x = OcsXmlResponse(resp)
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'An exception was caught in Ocs.remove_user_from_group due to '+
-                'negative server response code: {q}'.format(
-                q=x.get_status()))
+                "An exception was caught in Ocs.remove_user_from_group due to "
+                + "negative server response code: {q}".format(q=x.get_status())
+            )
             raise OperationFailure(
-                u'Ocs.remove_user_from_group response:{e}'.format(
-                e=x.get_status()))
+                "Ocs.remove_user_from_group response:{e}".format(
+                    e=x.get_status()
+                )
+            )
 
     def new_user(self, userid, password, groups=[]):
         """To create a new user.
@@ -1040,26 +1244,26 @@ class Ocs(Base):
             OperationFailure: The operation failed.
         """
         if groups:
-            resp=self.post_data(self.URL_USERS,
-                            {'userid': userid,
-                             'password': password,
-                             'groups': groups})
+            resp = self.post_data(
+                self.URL_USERS,
+                {"userid": userid, "password": password, "groups": groups},
+            )
         else:
-            resp=self.post_data(self.URL_USERS,
-                            {'userid': userid,
-                             'password': password,
-                            })
+            resp = self.post_data(
+                self.URL_USERS, {"userid": userid, "password": password}
+            )
 
-        x=Ocs_xml(resp)
-        if x.statuscode!='100':
+        x = OcsXmlResponse(resp)
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'An exception was caught in Ocs.new_user due to '+
-                'negative server response code: {q}'.format(
-                q=x.get_status()))
+                "An exception was caught in Ocs.new_user due to "
+                + "negative server response code: {q}".format(q=x.get_status())
+            )
             raise OperationFailure(
-                u'Ocs.new_user response:{e}'.format(e=x.get_status()))
+                "Ocs.new_user response:{e}".format(e=x.get_status())
+            )
 
-    def new_group(self,group_name):
+    def new_group(self, group_name):
         """To create a group.
 
         Creates a group in the cloud with the name of group_name.
@@ -1070,16 +1274,16 @@ class Ocs(Base):
         Raises:
             OperationFailure: The operation failed.
         """
-        resp=self.post_data(self.URL_GROUPS,
-                            {u'groupid':group_name})
-        x=Ocs_xml(resp)
-        if x.statuscode!='100':
+        resp = self.post_data(self.URL_GROUPS, {"groupid": group_name})
+        x = OcsXmlResponse(resp)
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'An exception was caught in Ocs.new_group due to '+
-                'negative server response code: {q}'.format(
-                q=x.get_status()))
+                "An exception was caught in Ocs.new_group due to "
+                + "negative server response code: {q}".format(q=x.get_status())
+            )
             raise OperationFailure(
-                u'Ocs.new_group response:{e}'.format(e=x.get_status()))
+                "Ocs.new_group response:{e}".format(e=x.get_status())
+            )
 
     def get_group_members(self, group_id):
         """Group members.
@@ -1095,19 +1299,20 @@ class Ocs(Base):
         Raises:
             OperationFailure: The operation failed.
         """
-        resp=self.get_data(self.URL_GROUPS+u'/{grp}'.format(grp=group_id))
-        x=Ocs_xml(resp,'GroupMembers')
-        if x.statuscode!='100':
+        resp = self.get_data(self.URL_GROUPS + "/{grp}".format(grp=group_id))
+        x = OcsXmlResponse(resp, "GroupMembers")
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'An exception was caught in Ocs.get_group_members due to '+
-                'negative server response code: {q}'.format(
-                q=x.get_status()))
+                "An exception was caught in Ocs.get_group_members due to "
+                + "negative server response code: {q}".format(q=x.get_status())
+            )
             raise OperationFailure(
-                u'Ocs.get_group_members response:{e}'.format(e=x.get_status()))
+                "Ocs.get_group_members response:{e}".format(e=x.get_status())
+            )
         return x.data
 
-##    def search_group(self, group):
-##        pass
+    ##    def search_group(self, group):
+    ##        pass
 
     def search_user(self, search=None, limit=None, offset=None):
         """Search users.
@@ -1125,25 +1330,22 @@ class Ocs(Base):
         Raises:
             OperationFailure: The operation failed.
         """
-        srch=self.URL_USERS
-        parameters={
-            'search': search,
-            'limit': limit,
-            'offset': offset
-        }
-        parameters= {k:v for (k,v) in parameters.items() if v is not None}
-        resp=self.get_data(srch + '?' +  urllib.parse.urlencode( parameters ))
-        x=Ocs_xml(resp,'GroupMembers')
-        if x.statuscode!='100':
+        srch = self.URL_USERS
+        parameters = {"search": search, "limit": limit, "offset": offset}
+        parameters = {k: v for (k, v) in parameters.items() if v is not None}
+        resp = self.get_data(srch + "?" + urllib.parse.urlencode(parameters))
+        x = OcsXmlResponse(resp, "GroupMembers")
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'An exception was caught in Ocs.search_user due to '+
-                'negative server response code: {q}'.format(
-                q=x.get_status()))
+                "An exception was caught in Ocs.search_user due to "
+                + "negative server response code: {q}".format(q=x.get_status())
+            )
             raise OperationFailure(
-                u'Ocs.search_user response:{e}'.format(e=x.get_status()))
+                "Ocs.search_user response:{e}".format(e=x.get_status())
+            )
         return x.data
 
-    def get_user(self,user_id):
+    def get_user(self, user_id):
         """Output information about the user.
 
         Returns detailed information about the user.
@@ -1157,18 +1359,19 @@ class Ocs(Base):
         Raises:
             OperationFailure: The operation failed.
         """
-        resp=self.get_data(self.URL_USERS+u'/{usr}'.format(usr=user_id))
-        x=Ocs_xml(resp,'User')
-        if x.statuscode!='100':
+        resp = self.get_data(self.URL_USERS + "/{usr}".format(usr=user_id))
+        x = OcsXmlResponse(resp, "User")
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'An exception was caught in Ocs.get_user due to '+
-                'negative server response code: {q}'.format(
-                q=x.get_status()))
-            raise OperationFailure( 'Ocs.get_user response:{e}'.format(
-                e=x.get_status()) )
+                "An exception was caught in Ocs.get_user due to "
+                + "negative server response code: {q}".format(q=x.get_status())
+            )
+            raise OperationFailure(
+                "Ocs.get_user response:{e}".format(e=x.get_status())
+            )
         return x.data
 
-    def set_user_parameter(self,user_id,param_name, param_value):
+    def set_user_parameter(self, user_id, param_name, param_value):
         """Set/change information about the user.
 
         Edits attributes related to a user. Users are able to edit email,
@@ -1185,30 +1388,54 @@ class Ocs(Base):
             OperationFailure: The operation failed.
             WrongParam: No any parameters to change
         """
-        parameters=['email','quota','displayname','phone','address','website',
-            'twitter','password']
+        parameters = [
+            "email",
+            "quota",
+            "displayname",
+            "phone",
+            "address",
+            "website",
+            "twitter",
+            "password",
+        ]
         if param_name in parameters:
-            resp=self.put_data(self.URL_USERS+u'/{usr}'.format(usr=user_id),
-                data_js={'key':param_name, 'value':param_value})
-            x=Ocs_xml(resp)
-            if x.statuscode!='100':
+            resp = self.put_data(
+                self.URL_USERS + "/{usr}".format(usr=user_id),
+                data_js={"key": param_name, "value": param_value},
+            )
+            x = OcsXmlResponse(resp)
+            if x.statuscode != "100":
                 Ocs.logger.exception(
-                    'An exception was caught in Ocs.set_user due to '+
-                    'negative server response code: {q}'.format(
-                    q=x.get_status()))
+                    "An exception was caught in Ocs.set_user due to "
+                    + "negative server response code: {q}".format(
+                        q=x.get_status()
+                    )
+                )
                 raise OperationFailure(
-                    'Ocs.set_user_parameter response:{e}'.format(
-                    e=x.get_status())
+                    "Ocs.set_user_parameter response:{e}".format(
+                        e=x.get_status()
+                    )
                 )
         else:
             raise WrongParam(
-                'Ocs.set_user_parameter wrong parameter name :{e}'.format(
-                e=param_name)
+                "Ocs.set_user_parameter wrong parameter name :{e}".format(
+                    e=param_name
+                )
             )
 
-    def set_user(self,user_id, email=None, quota=None, displayname=None,
-    phone=None, address=None, website=None, twitter=None, password=None,
-    **kvargs):
+    def set_user(
+        self,
+        user_id,
+        email=None,
+        quota=None,
+        displayname=None,
+        phone=None,
+        address=None,
+        website=None,
+        twitter=None,
+        password=None,
+        **kvargs
+    ):
         """Set/change information about the user.
 
         Edits attributes related to a user. Users are able to edit email,
@@ -1234,60 +1461,67 @@ class Ocs(Base):
         # server can change only one parameter by one request :(.
         if email:
             try:
-                self.set_user_parameter(user_id,'email',email)
+                self.set_user_parameter(user_id, "email", email)
             except OperationFailure as e:
-                Ocs.logger.error("Can't set parameter 'email': {e}".format(
-                    e=value))
+                Ocs.logger.error(
+                    "Can't set parameter 'email': {e}".format(e=value)
+                )
 
         if quota:
             try:
-                self.set_user_parameter(user_id,'quota',quota)
+                self.set_user_parameter(user_id, "quota", quota)
             except OperationFailure as e:
-                Ocs.logger.error("Can't set parameter 'quota': {e}".format(
-                    e=value))
+                Ocs.logger.error(
+                    "Can't set parameter 'quota': {e}".format(e=value)
+                )
 
         if displayname:
             try:
-                self.set_user_parameter(user_id,'displayname',displayname)
+                self.set_user_parameter(user_id, "displayname", displayname)
             except OperationFailure as e:
-                Ocs.logger.error("Can't set parameter 'displayname': {e}".format(
-                    e=value))
+                Ocs.logger.error(
+                    "Can't set parameter 'displayname': {e}".format(e=value)
+                )
 
         if phone:
             try:
-                self.set_user_parameter(user_id,'phone',phone)
+                self.set_user_parameter(user_id, "phone", phone)
             except OperationFailure as e:
-                Ocs.logger.error("Can't set parameter 'phone': {e}".format(
-                    e=value))
+                Ocs.logger.error(
+                    "Can't set parameter 'phone': {e}".format(e=value)
+                )
 
         if address:
             try:
-                self.set_user_parameter(user_id,'address',address)
+                self.set_user_parameter(user_id, "address", address)
             except OperationFailure as e:
-                Ocs.logger.error("Can't set parameter 'address': {e}".format(
-                    e=value))
+                Ocs.logger.error(
+                    "Can't set parameter 'address': {e}".format(e=value)
+                )
 
         if website:
             try:
-                self.set_user_parameter(user_id,'website',website)
+                self.set_user_parameter(user_id, "website", website)
             except OperationFailure as e:
-                Ocs.logger.error("Can't set parameter 'website': {e}".format(
-                    e=value))
+                Ocs.logger.error(
+                    "Can't set parameter 'website': {e}".format(e=value)
+                )
 
         if twitter:
             try:
-                self.set_user_parameter(user_id,'twitter',twitter)
+                self.set_user_parameter(user_id, "twitter", twitter)
             except OperationFailure as e:
-                Ocs.logger.error("Can't set parameter 'twitter': {e}".format(
-                    e=value))
+                Ocs.logger.error(
+                    "Can't set parameter 'twitter': {e}".format(e=value)
+                )
 
         if password:
             try:
-                self.set_user_parameter(user_id,'password',password)
+                self.set_user_parameter(user_id, "password", password)
             except OperationFailure as e:
-                Ocs.logger.error("Can't set parameter 'password': {e}".format(
-                    e=value))
-
+                Ocs.logger.error(
+                    "Can't set parameter 'password': {e}".format(e=value)
+                )
 
     def get_group_subadmins(self, group_id):
         """Subadmins.
@@ -1303,17 +1537,20 @@ class Ocs(Base):
         Raises:
             OperationFailure: The operation failed.
         """
-        resp=self.get_data(self.URL_GROUPS+'/{groupid}/subadmins'.format(
-            groupid=group_id))
-        x=Ocs_xml(resp,'Subadmins')
-        if x.statuscode!='100':
+        resp = self.get_data(
+            self.URL_GROUPS + "/{groupid}/subadmins".format(groupid=group_id)
+        )
+        x = OcsXmlResponse(resp, "Subadmins")
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'An exception was caught in Ocs.get_groups'+
-                ' due to negative server response code: {q}'.format(
-                q=x.get_status()))
+                "An exception was caught in Ocs.get_groups"
+                + " due to negative server response code: {q}".format(
+                    q=x.get_status()
+                )
+            )
             raise OperationFailure(
-                u'Ocs.get_groups response:{e}'.format(
-                e=x.get_status()))
+                "Ocs.get_groups response:{e}".format(e=x.get_status())
+            )
         return x.data
 
     def set_group_subadmins(self, group_id, user_id):
@@ -1328,18 +1565,19 @@ class Ocs(Base):
         Raises:
             OperationFailure: The operation failed.
         """
-        resp=self.post_data(self.URL_USERS+u'/{user_id}/subadmins'.format(
-                            user_id=user_id),
-                            {u'groupid':group_id})
-        x=Ocs_xml(resp)
-        if x.statuscode!='100':
+        resp = self.post_data(
+            self.URL_USERS + "/{user_id}/subadmins".format(user_id=user_id),
+            {"groupid": group_id},
+        )
+        x = OcsXmlResponse(resp)
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'An exception was caught in Ocs.set_group_subadmins due to '+
-                'negative server response code: {q}'.format(
-                q=x.get_status()))
+                "An exception was caught in Ocs.set_group_subadmins due to "
+                + "negative server response code: {q}".format(q=x.get_status())
+            )
             raise OperationFailure(
-                u'Ocs.set_group_subadmins response:{e}'.format(
-                e=x.get_status()))
+                "Ocs.set_group_subadmins response:{e}".format(e=x.get_status())
+            )
 
     def del_group_subadmins(self, group_id, user_id):
         """Revoke user as subadmin of the group.
@@ -1353,18 +1591,19 @@ class Ocs(Base):
         Raises:
             OperationFailure: The operation failed.
         """
-        resp=self.delete_data(self.URL_USERS+u'/{user_id}/subadmins'.format(
-                            user_id=user_id),
-                            {u'groupid':group_id})
-        x=Ocs_xml(resp)
-        if x.statuscode!='100':
+        resp = self.delete_data(
+            self.URL_USERS + "/{user_id}/subadmins".format(user_id=user_id),
+            {"groupid": group_id},
+        )
+        x = OcsXmlResponse(resp)
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'An exception was caught in Ocs.set_group_subadmins due to '+
-                'negative server response code: {q}'.format(
-                q=x.get_status()))
+                "An exception was caught in Ocs.set_group_subadmins due to "
+                + "negative server response code: {q}".format(q=x.get_status())
+            )
             raise OperationFailure(
-                u'Ocs.set_group_subadmins response:{e}'.format(
-                e=x.get_status()))
+                "Ocs.set_group_subadmins response:{e}".format(e=x.get_status())
+            )
 
     def remove_group(self, group_id):
         """Delete group.
@@ -1378,17 +1617,18 @@ class Ocs(Base):
         Raises:
             OperationFailure: The operation failed.
         """
-        resp=self.delete_data(self.URL_GROUPS +u'/{group_id}'.format(
-                                        group_id=group_id), {})
-        x=Ocs_xml(resp)
-        if x.statuscode!='100':
+        resp = self.delete_data(
+            self.URL_GROUPS + "/{group_id}".format(group_id=group_id), {}
+        )
+        x = OcsXmlResponse(resp)
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'An exception was caught in Ocs.remove_group due to '+
-                'negative server response code: {q}'.format(
-                q=x.get_status()))
+                "An exception was caught in Ocs.remove_group due to "
+                + "negative server response code: {q}".format(q=x.get_status())
+            )
             raise OperationFailure(
-                u'Ocs.remove_group response:{e}'.format(e=x.get_status()))
-
+                "Ocs.remove_group response:{e}".format(e=x.get_status())
+            )
 
     def remove_user(self, userid):
         """Delete user.
@@ -1401,16 +1641,18 @@ class Ocs(Base):
         Raises:
             OperationFailure: The operation failed.
         """
-        resp=self.delete_data(self.URL_USERS +u'/{user_id}'.format(
-                                        user_id=userid), {})
-        x=Ocs_xml(resp)
-        if x.statuscode!='100':
+        resp = self.delete_data(
+            self.URL_USERS + "/{user_id}".format(user_id=userid), {}
+        )
+        x = OcsXmlResponse(resp)
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'An exception was caught in Ocs.remove_user due to '+
-                'negative server response code: {q}'.format(
-                q=x.get_status()))
+                "An exception was caught in Ocs.remove_user due to "
+                + "negative server response code: {q}".format(q=x.get_status())
+            )
             raise OperationFailure(
-                u'Ocs.remove_user response:{e}'.format(e=x.get_status()))
+                "Ocs.remove_user response:{e}".format(e=x.get_status())
+            )
 
     def disable_user(self, userid):
         """Disable user.
@@ -1423,16 +1665,18 @@ class Ocs(Base):
         Raises:
             OperationFailure: The operation failed.
         """
-        resp=self.put_data(self.URL_USERS +u'/{user_id}/disable'.format(
-                                        user_id=userid), {})
-        x=Ocs_xml(resp)
-        if x.statuscode!='100':
+        resp = self.put_data(
+            self.URL_USERS + "/{user_id}/disable".format(user_id=userid), {}
+        )
+        x = OcsXmlResponse(resp)
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'An exception was caught in Ocs.disable_user due to '+
-                'negative server response code: {q}'.format(
-                q=x.get_status()))
+                "An exception was caught in Ocs.disable_user due to "
+                + "negative server response code: {q}".format(q=x.get_status())
+            )
             raise OperationFailure(
-                u'Ocs.disable_user response:{e}'.format(e=x.get_status()))
+                "Ocs.disable_user response:{e}".format(e=x.get_status())
+            )
 
     def enable_user(self, userid):
         """Enable user.
@@ -1445,13 +1689,15 @@ class Ocs(Base):
         Raises:
             OperationFailure: The operation failed.
         """
-        resp=self.put_data(self.URL_USERS +u'/{user_id}/enable'.format(
-                                        user_id=userid), {})
-        x=Ocs_xml(resp)
-        if x.statuscode!='100':
+        resp = self.put_data(
+            self.URL_USERS + "/{user_id}/enable".format(user_id=userid), {}
+        )
+        x = OcsXmlResponse(resp)
+        if x.statuscode != "100":
             Ocs.logger.exception(
-                'An exception was caught in Ocs.enable_user due to '+
-                'negative server response code: {q}'.format(
-                q=x.get_status()))
+                "An exception was caught in Ocs.enable_user due to "
+                + "negative server response code: {q}".format(q=x.get_status())
+            )
             raise OperationFailure(
-                u'Ocs.enable_user response:{e}'.format(e=x.get_status()))
+                "Ocs.enable_user response:{e}".format(e=x.get_status())
+            )

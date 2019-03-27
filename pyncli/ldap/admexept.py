@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Name:        admexept
 # Purpose:
 #
@@ -8,7 +8,7 @@
 # Created:     14.03.2017
 # Copyright:   (c) Evgeniy Semenov 2017
 # Licence:     MIT
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 
 class AdminException(Exception):
@@ -21,8 +21,10 @@ class AdminException(Exception):
 
     def __init__(self, value):
         self.value = value
+
     def __str__(self):
         return self.value
+
 
 class NotEnoughParams(AdminException):
     """ Exception class called in case of lack of necessary parameters in the
@@ -33,6 +35,7 @@ class NotEnoughParams(AdminException):
 
     """
 
+
 class EmptyParam(AdminException):
     """ Exception class called when a method is called with an empty parameter.
 
@@ -40,6 +43,7 @@ class EmptyParam(AdminException):
         value (str): Description of the exception.
 
     """
+
 
 class WrongParam(AdminException):
     """ The exception class that is called when the method is called as a
@@ -49,6 +53,8 @@ class WrongParam(AdminException):
         value (str): Description of the exception.
 
     """
+
+
 class TooLong(AdminException):
     """ Exception class called when the method is called with an invalid length
     parameter.
@@ -57,6 +63,8 @@ class TooLong(AdminException):
         value (str): Description of the exception.
 
     """
+
+
 class ConnectionFailure(AdminException):
     """ Exception class called when it is impossible to connect to the specified
     server.
@@ -65,6 +73,7 @@ class ConnectionFailure(AdminException):
         value (str): Description of the exception.
 
     """
+
 
 class OperationFailure(AdminException):
     """ Exception class called when it is impossible to perform the specified
@@ -75,6 +84,7 @@ class OperationFailure(AdminException):
 
     """
 
+
 class NotFound(AdminException):
     """ Exception class called in case of problems with the search.
 
@@ -84,6 +94,7 @@ class NotFound(AdminException):
         value (str): Description of the exception.
 
     """
+
 
 ##def main():
 ##    import sys

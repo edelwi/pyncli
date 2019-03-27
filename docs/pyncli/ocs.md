@@ -83,14 +83,12 @@ BackendCapabilities(self, setDisplayName=None, setPassword=None)
 
 NectCloud BackendCapabilities class
 
-<h3 id="pyncli.ocs.ocs.Ocs_xml">Ocs_xml</h3>
+<h3 id="pyncli.ocs.ocs.OcsXmlResponse">OcsXmlResponse</h3>
 
 ```python
-Ocs_xml(self, xml_text, data_class_name='')
+OcsXmlResponse(self, xml_text, data_class_name=None)
 ```
-
 NextCloud answer parser class.
-
 <h3 id="pyncli.ocs.ocs.GroupFolderMixin">GroupFolderMixin</h3>
 
 ```python
