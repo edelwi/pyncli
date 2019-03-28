@@ -454,6 +454,17 @@ class TestUserQuota2(unittest.TestCase):
     def test___str__0(self):
         self.assertEqual(str(self.quota), TEST_STR_QUOTA_2)
 
+class TestUserQuota3(unittest.TestCase):
+    def setUp(self):
+        self.quota = ocs.UserQuota('')
+
+    def tearDown(self):
+        self.quota = None
+
+    def test___init__0(self):
+        self.assertEqual(self.quota.quota, -3)
+        self.assertEqual(self.quota.used, 0)
+
 
 class TestBackendCapabilities(unittest.TestCase):
     def setUp(self):
@@ -805,6 +816,81 @@ class Ocs0(unittest.TestCase):
         self.assertDictEqual(self.ocs_inst.headers, {"OCS-APIRequest": "true"})
         self.assertListEqual(self.ocs_inst._apps, TEST_LIST_APPS_OCS)
         self.assertEqual(self.ocs_inst.__class__.__name__, "OcsMix")
+
+    def test__init__4(self):
+        self.assertRaises(
+            OperationFailure,
+            ocs.Ocs,
+            cloud_user="admin",
+            cloud_user_pwd="passwd",
+            cloud_URL="https://cloud.example.com",
+        )
+
+    @responses.activate
+    def test__get_apps_failed(self):
+        payload = TEST_XML_RESPONSE_FAILURE
+        responses.add(
+            responses.GET,
+            "https://cloud.example.com/ocs/v1.php/cloud/apps",
+            body=payload,
+        )
+        self.assertRaises(
+            OperationFailure,
+            ocs.Ocs,
+            cloud_user="admin",
+            cloud_user_pwd="passwd",
+            cloud_URL="https://cloud.example.com",
+        )
+
+    @responses.activate
+    def test__get_groups(self):
+        responses.add(
+            responses.GET,
+            "https://cloud.example.com/ocs/v1.php/cloud/apps",
+            body=TEST_XML_RESPONSE_APP_LDAP,
+        )
+        responses.add(
+            responses.GET,
+            "https://cloud.example.com/ocs/v1.php/cloud/groups",
+            body=TEST_XML_RESPONSE_GROUPS,
+        )
+        ocs_inst = ocs.Ocs(
+            cloud_user="admin",
+            cloud_user_pwd="passwd",
+            cloud_URL="https://cloud.example.com",
+        )
+        groups = ocs_inst.get_groups()
+        group_1 = ocs.Group(group_id="FIS")
+        group_2 = ocs.Group(group_id="IT")
+        group_3 = ocs.Group(group_id="PHD")
+        group_4 = ocs.Group(group_id="SECURITY")
+        group_5 = ocs.Group(group_id="TEST_NC1")
+        self.assertListEqual(
+            groups,
+            [group_1, group_2, group_3, group_4, group_5]
+        )
+
+    @responses.activate
+    def test__get_groups_failed(self):
+        responses.add(
+            responses.GET,
+            "https://cloud.example.com/ocs/v1.php/cloud/apps",
+            body=TEST_XML_RESPONSE_APP_LDAP,
+        )
+        responses.add(
+            responses.GET,
+            "https://cloud.example.com/ocs/v1.php/cloud/groups",
+            body=TEST_XML_RESPONSE_FAILURE,
+        )
+        ocs_inst = ocs.Ocs(
+            cloud_user="admin",
+            cloud_user_pwd="passwd",
+            cloud_URL="https://cloud.example.com",
+        )
+        self.assertRaises(
+            OperationFailure,
+            ocs_inst.get_groups,
+        )
 
 if __name__ == "__main__":
     unittest.main()

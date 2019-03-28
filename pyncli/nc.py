@@ -151,9 +151,10 @@ def new_groupfolder(args):
         ch.setLevel(logging.DEBUG)
 
     user_list = []
+    logger.debug("Reading file: {file}".format(file=args.usersfile.name))
     for line in args.usersfile:
         ln = line.strip()
-        print(ln)
+        logger.debug("Reading line: {line}".format(line=ln))
         if is_fullname(ln):
             user_list.append({"fullname": ln})
         elif is_login(ln):
@@ -306,9 +307,10 @@ def new_group(args):
         ch.setLevel(logging.DEBUG)
 
     user_list = []
+    logger.debug("Reading file: {file}".format(file=args.usersfile.name))
     for line in args.usersfile:
         ln = line.strip()
-        print(ln)
+        logger.debug("Reading line: {line}".format(line=ln))
         if is_fullname(ln):
             user_list.append({"fullname": ln})
         elif is_login(ln):
@@ -994,9 +996,10 @@ def add_users(args):
         ch.setLevel(logging.DEBUG)
 
     user_list = []
+    logger.debug("Reading file: {file}".format(file=args.usersfile.name))
     for line in args.usersfile:
         ln = line.strip()
-        print(ln)
+        logger.debug("Reading line: {line}".format(line=ln))
         if is_fullname(ln):
             user_list.append({"fullname": ln})
         elif is_login(ln):
@@ -1586,7 +1589,6 @@ def command_line():
     fullname_help_message = "Full username."
     login_help_message = "User login."
     newfoldername_help_message = "New group folder name."
-    #    human_help_message = 'Вывести данные в человекочитаемом формате'
     usrs_search_help_message = "Search string by full username."
     usrs_limit_help_message = (
         "Limit the output to the specified number of records."
