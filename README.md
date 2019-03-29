@@ -4,11 +4,24 @@
 
 Main goal of this project is to create command line interface to work with NextCloud Group Folders.
 
+*The package includes API and CLI allowing to perform the following actions:*
+
+* create, modify and delete non-domain users of NextCloud servers;
+* search for users on the server and get detailed information on them;
+* enable and disable users;
+* create and delete groups;
+* get and change the groups;
+* get, change and delete sub-administrators (managers) of groups;
+* create, modify and delete group folders;
+* assign and change quota for a group folder;
+* provide and modify access to group folders for groups with a certain level of access (permissions);
+* display a list of installed applications on the NextCloud server;
 
 ## Installing
 
 
 ```
+pip install -r https://raw.githubusercontent.com/edelwi/pyncli/master/requirements.txt
 pip install -i https://test.pypi.org/simple/ pyncli
 ```
 

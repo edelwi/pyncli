@@ -59,6 +59,14 @@ GroupFolder(self, id=None, mount_point=None, groups=None, quota=None, size=None)
 
 GroupFolder class
 
+<h3 id="pyncli.ocs.ocs.AppInfo">AppInfo</h3>
+
+```python
+AppInfo(self, id, info=None, remote={}, public=None, name=None, description=None, licence=None, author=None, require=None, shipped=None, standalone=None, default_enable=None, types=[])
+```
+
+AppInfo class, contains detailed information about application.
+
 <h3 id="pyncli.ocs.ocs.User">User</h3>
 
 ```python

@@ -449,3 +449,40 @@ contacts\n"""
 TEST_STR_SUBADMINS = """<OcsXmlResponse> ok (100): OK
 admin@example.com
 admin2@example.com\n"""
+
+TEST_XML_RESPONSE_APP_INFO = """<ocs>
+  <meta>
+    <statuscode>100</statuscode>
+    <status>ok</status>
+  </meta>
+  <data>
+    <info/>
+    <remote>
+      <files>appinfo/remote.php</files>
+      <webdav>appinfo/remote.php</webdav>
+      <filesync>appinfo/filesync.php</filesync>
+    </remote>
+    <public/>
+    <id>files</id>
+    <name>Files</name>
+    <description>File Management</description>
+    <licence>AGPL</licence>
+    <author>Robin Appelman</author>
+    <require>4.9</require>
+    <shipped>true</shipped>
+    <standalone></standalone>
+    <default_enable></default_enable>
+    <types>
+      <element>filesystem</element>
+    </types>
+  </data>
+</ocs>
+"""
+
+TEST_STR_APPS_INFO = """<OcsXmlResponse> ok (100): unknown
+<AppInfo> (files) "Files" author: Robin Appelman, licence: AGPL
+  description: File Management
+  require: 4.9, shipped: true, standalone: None
+  default_enable: None, public: None, remote: (files: "appinfo/remote.php", webdav: "appinfo/remote.php", filesync: "appinfo/filesync.php")
+  types: filesystem, info: None
+"""

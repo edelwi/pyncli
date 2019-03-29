@@ -209,6 +209,66 @@ class GroupFolder(Comparer):
             out = out[:-1]
         return out
 
+class AppInfo(Comparer):
+    """
+        AppInfo class, contains detailed information about application.
+    """
+
+    def __init__(
+        self,
+        id,
+        info=None,
+        remote={},
+        public=None,
+        name=None,
+        description=None,
+        licence=None,
+        author=None,
+        require=None,
+        shipped=None,
+        standalone=None,
+        default_enable=None,
+        types=[]
+    ):
+        self.id = id
+        self.info = info
+        self.remote=remote
+        self.public=public
+        self.name=name
+        self.description=description
+        self.licence=licence
+        self.author=author
+        self.require=require
+        self.shipped=shipped
+        self.standalone=standalone
+        self.default_enable=default_enable
+        self.types=types
+
+    def __str__(self):
+        out = '<AppInfo> ({id}) "{name}" author: {a}, licence: {lic}\n'.format(
+            name=self.name,
+            id=self.id,
+            a=self.author,
+            lic=self.licence,
+        )
+        out += "  description: {dsc}\n".format(dsc=self.description)
+        out += "  require: {r}, shipped: {s}, standalone: {sa}\n".format(
+            r=self.require,
+            sa=self.standalone,
+            s=self.shipped
+        )
+        out += "  default_enable: {de}, public: {pub}, remote: ({rem})\n".format(
+            de=self.default_enable,
+            pub=self.public,
+            rem=', '.join(
+                ['{0}: "{1}"'.format(k,v) for k, v in self.remote.items()]
+            )
+        )
+        out += "  types: {tps}, info: {inf}".format(
+            tps=', '.join(self.types),
+            inf=self.info
+        )
+        return out
 
 class User(Comparer):
     """
@@ -343,6 +403,7 @@ class OcsXmlResponse(object):
         "User",
         "Apps",
         "Subadmins",
+        "AppInfo"
     ]
 
     def __init__(self, xml_text, data_class_name=None):
@@ -417,6 +478,8 @@ class OcsXmlResponse(object):
             return OcsXmlResponse._parse_apps
         elif data_class_name == "Subadmins":
             return OcsXmlResponse._parse_subadmins
+        elif data_class_name == "AppInfo":
+            return OcsXmlResponse._parse_app_info
 
     @staticmethod
     def _parse_group_folder(et_object):
@@ -519,6 +582,28 @@ class OcsXmlResponse(object):
         data = et_object.findall(".//data/element")
         for element in data:
             result.append(element.text)
+        return result
+
+    @staticmethod
+    def _parse_app_info(et_object):
+        result = []
+        data = et_object.find(".//data")
+        app_info = {}
+        for subelement in data:
+            sub = subelement.getchildren()
+            types = []
+            if subelement.tag == "types":
+                for item in sub:
+                    types.append(item.text)
+                app_info["types"] = types
+            elif subelement.tag == "remote":
+                remote = {}
+                for item in sub:
+                    remote[item.tag] = item.text
+                app_info["remote"] = remote
+            else:
+                app_info[subelement.tag] = subelement.text
+        result.append(AppInfo(**app_info))
         return result
 
     def get_status(self):
@@ -948,11 +1033,11 @@ class Ocs(Base):
         available_classes = set(CLS_MAP.keys())
         to_mix = set(self._apps).intersection(available_classes)
         if to_mix:
-            reMix = tuple(
+            re_mix = tuple(
                 getattr(sys.modules[__name__], class_name)
                 for class_name in (CLS_MAP[x] for x in to_mix)
             )
-            self.__class__ = type("OcsMix", reMix, {})
+            self.__class__ = type("OcsMix", re_mix, {})
 
     def get_data(self, url_path):
         """Run a GET request to the cloud.
@@ -1138,13 +1223,41 @@ class Ocs(Base):
         x = OcsXmlResponse(resp, "Apps")
         if x.statuscode != "100":
             Ocs.logger.exception(
-                "Fire exeption Ocs.get_groups"
+                "Fire exeption Ocs.get_apps"
                 + " due to negative server response code: {q}".format(
                     q=x.get_status()
                 )
             )
             raise OperationFailure(
-                "Ocs.get_groups response:{e}".format(e=x.get_status())
+                "Ocs.get_apps response:{e}".format(e=x.get_status())
+            )
+        return x.data
+
+    def get_app_info(self, app_id):
+        """Application information.
+
+        Get detailed information about installed application.
+
+        Args:
+            app_id (str): Application ID.
+
+        Returns:
+            (:obj: AppInfo): NextCloud application object.
+
+        Raises:
+            OperationFailure: The operation failed.
+        """
+        resp = self.get_data(self.URL_APPS + "/{id}".format(id=app_id))
+        x = OcsXmlResponse(resp, "AppsInfo")
+        if x.statuscode != "100":
+            Ocs.logger.exception(
+                "Fire exeption Ocs.get_app_info"
+                + " due to negative server response code: {q}".format(
+                    q=x.get_status()
+                )
+            )
+            raise OperationFailure(
+                "Ocs.get_app_info response:{e}".format(e=x.get_status())
             )
         return x.data
 
@@ -1543,13 +1656,13 @@ class Ocs(Base):
         x = OcsXmlResponse(resp, "Subadmins")
         if x.statuscode != "100":
             Ocs.logger.exception(
-                "An exception was caught in Ocs.get_groups"
+                "An exception was caught in Ocs.get_group_subadmins"
                 + " due to negative server response code: {q}".format(
                     q=x.get_status()
                 )
             )
             raise OperationFailure(
-                "Ocs.get_groups response:{e}".format(e=x.get_status())
+                "Ocs.get_group_subadmins response:{e}".format(e=x.get_status())
             )
         return x.data
 
@@ -1598,11 +1711,11 @@ class Ocs(Base):
         x = OcsXmlResponse(resp)
         if x.statuscode != "100":
             Ocs.logger.exception(
-                "An exception was caught in Ocs.set_group_subadmins due to "
+                "An exception was caught in Ocs.del_group_subadmins due to "
                 + "negative server response code: {q}".format(q=x.get_status())
             )
             raise OperationFailure(
-                "Ocs.set_group_subadmins response:{e}".format(e=x.get_status())
+                "Ocs.del_group_subadmins response:{e}".format(e=x.get_status())
             )
 
     def remove_group(self, group_id):

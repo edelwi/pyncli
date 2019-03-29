@@ -746,6 +746,42 @@ class TestOcsXmlResponseApps(unittest.TestCase):
     def test__str__(self):
         self.assertEqual(str(self.obj), TEST_STR_APPS)
 
+class TestOcsXmlResponseAppInfo(unittest.TestCase):
+    def setUp(self):
+        self.resp = TEST_XML_RESPONSE_APP_INFO
+        self.obj = ocs.OcsXmlResponse(self.resp, data_class_name="AppInfo")
+
+    def tearDown(self):
+        self.resp = None
+        self.obj = None
+
+    def test__init__0(self):
+        self.assertEqual(self.obj.status, "ok")
+        self.assertEqual(self.obj.statuscode, "100")
+        self.assertEqual(self.obj.message, "unknown")
+        self.assertEqual(self.obj.data[0].id, 'files')
+        self.assertIsNone(self.obj.data[0].info)
+        self.assertDictEqual(
+            self.obj.data[0].remote, {
+                'files': 'appinfo/remote.php',
+                'webdav': 'appinfo/remote.php',
+                'filesync': 'appinfo/filesync.php',
+            }
+        )
+        self.assertIsNone(self.obj.data[0].public)
+        self.assertEqual(self.obj.data[0].name, 'Files')
+        self.assertEqual(self.obj.data[0].description, 'File Management')
+        self.assertEqual(self.obj.data[0].licence, 'AGPL')
+        self.assertEqual(self.obj.data[0].author, 'Robin Appelman')
+        self.assertEqual(self.obj.data[0].require, '4.9')
+        self.assertEqual(self.obj.data[0].shipped, 'true')
+        self.assertIsNone(self.obj.data[0].standalone)
+        self.assertIsNone(self.obj.data[0].default_enable)
+        self.assertListEqual(self.obj.data[0].types, ['filesystem',])
+
+        #print(self.obj)
+    def test__str__(self):
+        self.assertEqual(str(self.obj), TEST_STR_APPS_INFO)
 
 class TestOcsXmlResponseSubadmins(unittest.TestCase):
     def setUp(self):
