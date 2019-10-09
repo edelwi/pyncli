@@ -426,14 +426,16 @@ def new_group(args):
         )
         adm.create_group(ldap_grp)
 
+        share_grp = adm.get_group(
+            "{lpr}{gr}{lsu}".format(lpr=LPR, lsu=LSU, gr=group_name), "group"
+        )
+
         if LPARENT:
             # Добавим группу шары в группу всех шар
             all_shares_ldap_grp = adm.get_group(LPARENT, "group")
             adm.add_users_to_groups([share_grp], [all_shares_ldap_grp])
 
-        share_grp = adm.get_group(
-            "{lpr}{gr}{lsu}".format(lpr=LPR, lsu=LSU, gr=group_name), "group"
-        )
+
         adm.add_users_to_groups(user_obj_list, [share_grp])
 
 

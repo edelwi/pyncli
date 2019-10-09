@@ -54,7 +54,7 @@ Group class
 <h3 id="pyncli.ocs.ocs.GroupFolder">GroupFolder</h3>
 
 ```python
-GroupFolder(self, id=None, mount_point=None, groups=None, quota=None, size=None)
+GroupFolder(self, id=None, mount_point=None, groups=None, quota=None, size=None, **kwargs)
 ```
 
 GroupFolder class

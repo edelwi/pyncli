@@ -1,2 +1,2 @@
 name = "pyncli"
-__version__= '0.1.dev46'
+__version__= '0.1.dev47'
