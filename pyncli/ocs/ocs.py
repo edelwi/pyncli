@@ -11,25 +11,22 @@
 # -------------------------------------------------------------------------------
 """This module implements little part of the web API for the NextCloud server.
 """
-import requests
-from urllib.parse import urljoin, urlparse
-from pyncli.ldap.admexept import AdminException, OperationFailure, WrongParam
-
-import xml.etree.ElementTree as ET
-from xml.etree.ElementTree import ParseError
-from pyncli.config import Config
 import logging
-from logging.handlers import RotatingFileHandler
-
-# import types
-from collections import OrderedDict
-from datetime import datetime
 import sys
 import urllib.parse
+import xml.etree.ElementTree as ET
+# import types
+from collections import OrderedDict
 from copy import deepcopy
+from datetime import datetime
+from urllib.parse import urljoin, urlparse
+from xml.etree.ElementTree import ParseError
+
+import requests
+
+from pyncli.ldap.admexept import OperationFailure, WrongParam
 
 logging.getLogger("ocs").addHandler(logging.NullHandler())
-
 
 PERMISSION_READ = 1
 """int: Read permission """
@@ -55,7 +52,7 @@ PERMISSIONS = {
     "PERMISSION_UPDATE": PERMISSION_UPDATE,
     "PERMISSION_DELETE": PERMISSION_DELETE,
     "PERMISSION_SHARE": PERMISSION_SHARE,
-    #'PERMISSION_ALL':PERMISSION_ALL
+    # 'PERMISSION_ALL':PERMISSION_ALL
 }
 """Dict: Permissions and its values """
 
@@ -98,7 +95,7 @@ def human_permissions(permissions, short=False):
     except:
         return None
     if permissions > sum(PERMISSIONS.values()) or permissions < min(
-        PERMISSIONS.values()
+            PERMISSIONS.values()
     ):
         return ""
     rez = []
@@ -188,7 +185,8 @@ class GroupFolder(Comparer):
     """
 
     def __init__(
-        self, id=None, mount_point=None, groups=None, quota=None, size=None
+            self, id=None, mount_point=None, groups=None, quota=None, size=None,
+            **kwargs
     ):
         self.id = id
         self.mount_point = mount_point
@@ -209,40 +207,41 @@ class GroupFolder(Comparer):
             out = out[:-1]
         return out
 
+
 class AppInfo(Comparer):
     """
         AppInfo class, contains detailed information about application.
     """
 
     def __init__(
-        self,
-        id,
-        info=None,
-        remote={},
-        public=None,
-        name=None,
-        description=None,
-        licence=None,
-        author=None,
-        require=None,
-        shipped=None,
-        standalone=None,
-        default_enable=None,
-        types=[]
+            self,
+            id,
+            info=None,
+            remote={},
+            public=None,
+            name=None,
+            description=None,
+            licence=None,
+            author=None,
+            require=None,
+            shipped=None,
+            standalone=None,
+            default_enable=None,
+            types=[]
     ):
         self.id = id
         self.info = info
-        self.remote=remote
-        self.public=public
-        self.name=name
-        self.description=description
-        self.licence=licence
-        self.author=author
-        self.require=require
-        self.shipped=shipped
-        self.standalone=standalone
-        self.default_enable=default_enable
-        self.types=types
+        self.remote = remote
+        self.public = public
+        self.name = name
+        self.description = description
+        self.licence = licence
+        self.author = author
+        self.require = require
+        self.shipped = shipped
+        self.standalone = standalone
+        self.default_enable = default_enable
+        self.types = types
 
     def __str__(self):
         out = '<AppInfo> ({id}) "{name}" author: {a}, licence: {lic}\n'.format(
@@ -261,7 +260,7 @@ class AppInfo(Comparer):
             de=self.default_enable,
             pub=self.public,
             rem=', '.join(
-                ['{0}: "{1}"'.format(k,v) for k, v in self.remote.items()]
+                ['{0}: "{1}"'.format(k, v) for k, v in self.remote.items()]
             )
         )
         out += "  types: {tps}, info: {inf}".format(
@@ -270,30 +269,31 @@ class AppInfo(Comparer):
         )
         return out
 
+
 class User(Comparer):
     """
         NextCloud User
     """
 
     def __init__(
-        self,
-        id=None,
-        enabled=None,
-        storageLocation=None,
-        lastLogin=None,
-        backend=None,
-        subadmin=None,
-        quota=None,
-        email=None,
-        displayname=None,
-        phone=None,
-        address=None,
-        website=None,
-        twitter=None,
-        groups=None,
-        language=None,
-        locale=None,
-        backendCapabilities=None,
+            self,
+            id=None,
+            enabled=None,
+            storageLocation=None,
+            lastLogin=None,
+            backend=None,
+            subadmin=None,
+            quota=None,
+            email=None,
+            displayname=None,
+            phone=None,
+            address=None,
+            website=None,
+            twitter=None,
+            groups=None,
+            language=None,
+            locale=None,
+            backendCapabilities=None,
     ):
 
         self.id = id
@@ -318,11 +318,11 @@ class User(Comparer):
         self.website = website
         self.twitter = twitter
         # TODO: add check
-        self.groups = groups  #!
+        self.groups = groups
         self.language = language
         self.locale = locale
         # TODO: add check
-        self.backend_capabilities = backendCapabilities  #!
+        self.backend_capabilities = backendCapabilities  # !
 
     def __str__(self):
         out = '<User> ({id}) "{dn}" enabled: {en}, e-mail: {em}\n'.format(
@@ -420,8 +420,8 @@ class OcsXmlResponse(object):
 
         """
         if (
-            data_class_name is not None
-            and data_class_name not in self._SUPPORTED_CLASS_NAMES
+                data_class_name is not None
+                and data_class_name not in self._SUPPORTED_CLASS_NAMES
         ):
             raise WrongParam(
                 "Unsupported class name: {cls}".format(cls=data_class_name)
@@ -658,7 +658,7 @@ class GroupFolderMixin(object):
             )
 
     def set_group_folder_group_permissions(
-        self, gfolder_id, group_id, permissions
+            self, gfolder_id, group_id, permissions
     ):
         """Set permissions for group folder per group.
 
@@ -932,7 +932,6 @@ class GroupFolderMixin(object):
             )
 
             for grp in group_folder_obj.groups:
-
                 # 2 add group
                 Ocs.logger.debug(
                     "Create a group {mp}.".format(mp=grp.group_id)
@@ -1208,10 +1207,16 @@ class Ocs(Base):
             )
             raise OperationFailure("Ocs.put_data error:{e}".format(e=e))
 
-    def get_apps(self):
+    def get_apps(self, filter='enabled'):
         """Applications.
 
         Get list of installed applications.
+
+        Args:
+            filter (str): Filter by application accessibility:
+                'enabled' - filter by enabled application,
+                'disabled' - filter by disabled application,
+                'nofilter' - unfiltered applications.
 
         Returns:
             list: List of applications name.
@@ -1219,7 +1224,13 @@ class Ocs(Base):
         Raises:
             OperationFailure: The operation failed.
         """
-        resp = self.get_data(self.URL_APPS)
+        if filter == 'enabled':
+            resp = self.get_data(self.URL_APPS + '?filter=enabled')
+        elif filter == 'disabled':
+            resp = self.get_data(self.URL_APPS + '?filter=disabled')
+        elif filter == 'nofilter':
+            resp = self.get_data(self.URL_APPS)
+
         x = OcsXmlResponse(resp, "Apps")
         if x.statuscode != "100":
             Ocs.logger.exception(
@@ -1537,17 +1548,17 @@ class Ocs(Base):
             )
 
     def set_user(
-        self,
-        user_id,
-        email=None,
-        quota=None,
-        displayname=None,
-        phone=None,
-        address=None,
-        website=None,
-        twitter=None,
-        password=None,
-        **kvargs
+            self,
+            user_id,
+            email=None,
+            quota=None,
+            displayname=None,
+            phone=None,
+            address=None,
+            website=None,
+            twitter=None,
+            password=None,
+            **kvargs
     ):
         """Set/change information about the user.
 
@@ -1577,7 +1588,7 @@ class Ocs(Base):
                 self.set_user_parameter(user_id, "email", email)
             except OperationFailure as e:
                 Ocs.logger.error(
-                    "Can't set parameter 'email': {e}".format(e=value)
+                    "Can't set parameter 'email': {e}".format(e=e.value)
                 )
 
         if quota:
@@ -1585,7 +1596,7 @@ class Ocs(Base):
                 self.set_user_parameter(user_id, "quota", quota)
             except OperationFailure as e:
                 Ocs.logger.error(
-                    "Can't set parameter 'quota': {e}".format(e=value)
+                    "Can't set parameter 'quota': {e}".format(e=e.value)
                 )
 
         if displayname:
@@ -1593,7 +1604,7 @@ class Ocs(Base):
                 self.set_user_parameter(user_id, "displayname", displayname)
             except OperationFailure as e:
                 Ocs.logger.error(
-                    "Can't set parameter 'displayname': {e}".format(e=value)
+                    "Can't set parameter 'displayname': {e}".format(e=e.value)
                 )
 
         if phone:
@@ -1601,7 +1612,7 @@ class Ocs(Base):
                 self.set_user_parameter(user_id, "phone", phone)
             except OperationFailure as e:
                 Ocs.logger.error(
-                    "Can't set parameter 'phone': {e}".format(e=value)
+                    "Can't set parameter 'phone': {e}".format(e=e.value)
                 )
 
         if address:
@@ -1609,7 +1620,7 @@ class Ocs(Base):
                 self.set_user_parameter(user_id, "address", address)
             except OperationFailure as e:
                 Ocs.logger.error(
-                    "Can't set parameter 'address': {e}".format(e=value)
+                    "Can't set parameter 'address': {e}".format(e=e.value)
                 )
 
         if website:
@@ -1617,7 +1628,7 @@ class Ocs(Base):
                 self.set_user_parameter(user_id, "website", website)
             except OperationFailure as e:
                 Ocs.logger.error(
-                    "Can't set parameter 'website': {e}".format(e=value)
+                    "Can't set parameter 'website': {e}".format(e=e.value)
                 )
 
         if twitter:
@@ -1625,7 +1636,7 @@ class Ocs(Base):
                 self.set_user_parameter(user_id, "twitter", twitter)
             except OperationFailure as e:
                 Ocs.logger.error(
-                    "Can't set parameter 'twitter': {e}".format(e=value)
+                    "Can't set parameter 'twitter': {e}".format(e=e.value)
                 )
 
         if password:
@@ -1633,7 +1644,7 @@ class Ocs(Base):
                 self.set_user_parameter(user_id, "password", password)
             except OperationFailure as e:
                 Ocs.logger.error(
-                    "Can't set parameter 'password': {e}".format(e=value)
+                    "Can't set parameter 'password': {e}".format(e=e.value)
                 )
 
     def get_group_subadmins(self, group_id):
@@ -1770,7 +1781,7 @@ class Ocs(Base):
     def disable_user(self, userid):
         """Disable user.
 
-        Disables a user on the cloud with the name from userid.
+        Disables the user on the cloud with the name from userid.
 
         Args:
             userid (str): User ID (user name).
@@ -1794,7 +1805,7 @@ class Ocs(Base):
     def enable_user(self, userid):
         """Enable user.
 
-        Enables a user on the cloud with the name from userid.
+        Enables the user on the cloud with the name from userid.
 
         Args:
             userid (str): User ID (user name).
@@ -1813,4 +1824,52 @@ class Ocs(Base):
             )
             raise OperationFailure(
                 "Ocs.enable_user response:{e}".format(e=x.get_status())
+            )
+
+    def enable_app(self, appid):
+        """Enable application.
+
+        Enables the application on the cloud with the ID from appid.
+
+        Args:
+            appid (str): Application ID.
+
+        Raises:
+            OperationFailure: The operation failed.
+        """
+        resp = self.post_data(
+            self.URL_APPS + "/{app_id}".format(app_id=appid), {}
+        )
+        x = OcsXmlResponse(resp)
+        if x.statuscode != "100":
+            Ocs.logger.exception(
+                "An exception was caught in Ocs.enable_app due to "
+                + "negative server response code: {q}".format(q=x.get_status())
+            )
+            raise OperationFailure(
+                "Ocs.enable_app response:{e}".format(e=x.get_status())
+            )
+
+    def disable_app(self, appid):
+        """Disable application.
+
+        Disables the application on the cloud with the ID from appid.
+
+        Args:
+            appid (str): Application ID.
+
+        Raises:
+            OperationFailure: The operation failed.
+        """
+        resp = self.delete_data(
+            self.URL_APPS + "/{app_id}".format(app_id=appid), {}
+        )
+        x = OcsXmlResponse(resp)
+        if x.statuscode != "100":
+            Ocs.logger.exception(
+                "An exception was caught in Ocs.disable_app due to "
+                + "negative server response code: {q}".format(q=x.get_status())
+            )
+            raise OperationFailure(
+                "Ocs.disable_app response:{e}".format(e=x.get_status())
             )

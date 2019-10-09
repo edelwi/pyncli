@@ -34,9 +34,9 @@ from pyncli.ldap.admexept import AdminException, OperationFailure, WrongParam
 import re
 
 PERMISSION_DEFAULT_STR = Config.GF_PERMISSION_DEFAULT_STR  #'r'
-PATTERN_LOGIN_1 = re.compile(r"^[a-zA-Z]+\w*$", re.IGNORECASE)
+PATTERN_LOGIN_1 = re.compile(r"^[a-zA-Z]+[a-zA-Z0-9-\._]*$", re.IGNORECASE)
 PATTERN_LOGIN_2 = re.compile(
-    r"^[a-zA-Z]+[a-zA-Z0-9-\.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", re.IGNORECASE
+    r"^[a-zA-Z]+[a-zA-Z0-9-\._]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", re.IGNORECASE
 )
 PATTERN_QUOTA_1 = re.compile(
     r"(?P<value>\d+\.?\d*)(?P<multiplier>[kmgt]?)", re.IGNORECASE
