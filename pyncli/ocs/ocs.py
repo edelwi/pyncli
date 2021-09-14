@@ -1339,7 +1339,7 @@ class Ocs(Base):
             )
         )
         raise OperationFailure(
-            "Ocs.add_user_to_group response: Error: {code} - {reaon}".format(
+            "Ocs.add_user_to_group response: Error: {code} - {reason}".format(
                 code=cloud_answer.statuscode,
                 reason=fail_reason
             )
@@ -1387,7 +1387,7 @@ class Ocs(Base):
             )
         )
         raise OperationFailure(
-            "Ocs.remove_user_from_group Error: {code} - {reaon}".format(
+            "Ocs.remove_user_from_group Error: {code} - {reason}".format(
                 code=cloud_answer.statuscode,
                 reason=fail_reason
             )
