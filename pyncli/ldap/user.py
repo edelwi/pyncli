@@ -199,6 +199,7 @@ class user(protouser.protouser, metaclass=CleanSetAttrMeta):
         employee_type="",
         acc_control=[uac.NORMAL_ACCOUNT, uac.ACCOUNTDISABLE],
         description="",
+        principal_name="",
         **kwargs
     ):
         """constructor
@@ -222,6 +223,7 @@ class user(protouser.protouser, metaclass=CleanSetAttrMeta):
                 employee_type (str): employee type
                 acc_control (list of :uac: or hex): User Account Controll attribute
                 description (str): description
+                principal_name (str): user principal name
             Raises:
                 WrongParam: The Organisational Unit parameter is not of the correct
                 type.
@@ -242,6 +244,7 @@ class user(protouser.protouser, metaclass=CleanSetAttrMeta):
             "comment",
             "employee_type",
             "description",
+            "principal_name",
         ]
         super(user, self).__init__(login, **kwargs)
 
@@ -293,9 +296,12 @@ class user(protouser.protouser, metaclass=CleanSetAttrMeta):
         self.initials = self.check_length("initials", self.get_initials())
         self.dn = self.check_length("dn", self.get_dn())
         self.full_name = self.check_length("full_name", self.get_fullname())
-        self.principal_name = self.check_length(
-            "principal_name", self.login + "@" + self.get_domain()
-        )
+        if principal_name:
+            self.principal_name = self.check_length("principal_name", principal_name)
+        else:
+            self.principal_name = self.check_length(
+                "principal_name", self.login + "@" + self.get_domain()
+            )
 
     @property
     def enabled(self):
