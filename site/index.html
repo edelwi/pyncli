@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="None">
+  
+  <link rel="shortcut icon" href="img/favicon.ico">
+  <title>Home - pyncli</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Home";
+    var mkdocs_page_input_path = "index.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="js/jquery-2.1.1.min.js" defer></script>
+  <script src="js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="." class="icon icon-home"> pyncli</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1 current">
+		
+    <a class="current" href=".">Home</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l2"><a href="#pyncli-python-nextcloud-command-line-interface">pyncli - Python NextCloud Command Line Interface</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l3" href="#installing">Installing</a></li>
+        
+            <li><a class="toctree-l3" href="#configurration">Configurration</a></li>
+        
+            <li><a class="toctree-l3" href="#cli">CLI</a></li>
+        
+            <li><a class="toctree-l3" href="#api">API</a></li>
+        
+            <li><a class="toctree-l3" href="#documentation">Documentation</a></li>
+        
+            <li><a class="toctree-l3" href="#authors">Authors</a></li>
+        
+            <li><a class="toctree-l3" href="#license">License</a></li>
+        
+            <li><a class="toctree-l3" href="#copyright">Copyright</a></li>
+        
+        </ul>
+    
+
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">pyncli.ocs</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="pyncli/ocs/">Simple Ocs API</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">pyncli.ldap</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="pyncli/ldap/">Simple LDAP API</a>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href=".">pyncli</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Home</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="pyncli-python-nextcloud-command-line-interface">pyncli - Python NextCloud Command Line Interface</h1>
+<p><a href="https://travis-ci.org/edelwi/pyncli"><img alt="Build Status" src="https://travis-ci.org/edelwi/pyncli.svg?branch=master" /></a> <a href="https://pyncli.readthedocs.io/en/latest/?badge=latest"><img alt="Documentation Status" src="https://readthedocs.org/projects/pyncli/badge/?version=latest" /></a> <a href="https://codecov.io/gh/edelwi/pyncli"><img alt="Coverage Status" src="https://codecov.io/gh/edelwi/pyncli/branch/master/graph/badge.svg" /></a></p>
+<p>Main goal of this project is to create command line interface to work with NextCloud Group Folders.</p>
+<p><em>The package includes API and CLI allowing to perform the following actions:</em></p>
+<ul>
+<li>create, modify and delete non-domain users of NextCloud servers;</li>
+<li>search for users on the server and get detailed information on them;</li>
+<li>enable and disable users;</li>
+<li>create and delete groups;</li>
+<li>get and change the groups;</li>
+<li>get, change and delete sub-administrators (managers) of groups;</li>
+<li>create, modify and delete group folders;</li>
+<li>assign and change quota for a group folder;</li>
+<li>provide and modify access to group folders for groups with a certain level of access (permissions);</li>
+<li>display a list of installed applications on the NextCloud server;</li>
+</ul>
+<h2 id="installing">Installing</h2>
+<pre><code>pip install -r https://raw.githubusercontent.com/edelwi/pyncli/master/requirements.txt
+pip install -i https://test.pypi.org/simple/ pyncli
+</code></pre>
+
+<h2 id="configurration">Configurration</h2>
+<p>You should set evironment variables like belowe or create .env file in your users home directory to store your credentials and configuration parameters.
+Like this:</p>
+<pre><code class="sh"># The user of the cloud from which requests will be made.
+CLOUD_USER=admin
+
+# Cloud users password.
+CLOUD_USER_PWD=admin
+
+# Your NextCloud server URL. Or you can try a demo server, first create it at https://demo.nextcloud.com.
+CLOUD_BASE_URL=https://demo.nextcloud.com/random_/
+
+# Print log on console.
+LOG_TO_STDOUT=True
+# Log file name.
+LOG_FILE=pyncli.log
+
+# The maximum size of the log file.
+LOG_MAX_BYTES=10240000
+
+# Backups log files count.
+LOG_BACKUP_COUNT=12
+
+# User in your LDAP who can create groups in LDAP_SEARCH_FOR_GROUPS location. 
+# If you are not using an LDAP server, leave this variable empty and ignore all other variables whose names begin with LDAP_.
+LDAP_USER=ad_admin@example.com
+
+# LDAP users password.
+LDAP_USER_PWD=very_secret_pass
+
+# Primary LDAP server. Used ldaps bind on port 636 by default.
+LDAP_HOST=dc1.example.com
+
+# Additional server, if specified, uses round-robin binding.
+LDAP_ADD_SERVER=dc2.example.com
+
+# Base distinctive names, which is used when searching for users.
+LDAP_BASE_DN=dc=example,dc=com
+
+# Distinguished name of the group organizational unit used to work with ldap groups.
+LDAP_SEARCH_FOR_GROUPS=OU=special_groups,OU=groups,dc=example,dc=com
+
+# Description for created groups.
+LDAP_NEW_GROUP_DESCRIPTION=&quot;Access group to cloud group&quot;
+
+# The prefix for the name of the ldap group to the corresponding cloud group.
+LDAP_GRP_NAME_PREFIX=&quot;Cloud_&quot;
+
+# The suffix for the name of the ldap group to the corresponding cloud group.
+LDAP_GRP_NAME_SUFFIX=&quot;&quot;
+
+# Parent group in which all newly created LDAP groups will be placed.
+LDAP_PARENT_GRP_NAME=&quot;My_cloud_shares&quot;
+
+# The quota value that will be applied by default unless explicitly specified. Default 5Gb. Set -3 to unlimited.
+USER_DEFAULT_QUOTA=&quot;5368709120&quot;
+
+# The prefix for the group folder name. So you can help the user to distinguish personal folders from group folders. I use surrounding curly braces.
+GF_NAME_PREFIX=&quot;{&quot;
+
+# The suffix for the group folder name. So you can help the user to distinguish personal folders from group folders.
+GF_NAME_SUFFIX=&quot;}&quot;
+
+# The permissions value that will be applied by default unless explicitly specified.
+GF_PERMISSION_DEFAULT_STR=&quot;r&quot;
+
+
+</code></pre>
+
+<h2 id="cli">CLI</h2>
+<p>Command Line menu map</p>
+<ul>
+<li>Create new GroupFolder</li>
+</ul>
+<pre><code class="sh">pnc new groupfolder --name (-n) GroupfolderName [--permissions (-p)] rcudsa (default r) [--quota (-q)] (default 5g) --usersfile (-u) filename.txt in utf-8 [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Create new Group</li>
+</ul>
+<pre><code class="sh">pnc new group --name (-n) GroupName --usersfile (-u) filename.txt in utf-8 [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Create new user</li>
+</ul>
+<pre><code class="sh">pnc new user --login (-l) UserLogin --password (-p) new password [--email (-e)] email [--displayname (-i)] display name [--quota (-q)] quota [--phone (-m)] phone [--address (-a)] address [--website (-w)] website [--twitter (-t)] twitter [--group (-g)] Group name [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Delete member from the group</li>
+</ul>
+<pre><code class="sh">pnc del group-member --name (-n) GroupName [--fullname (-f)] UserFullName [--login] UserLogin [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Delete Group</li>
+</ul>
+<pre><code class="sh">pnc del group --name (-n) GroupName [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Unlink group from the groupfolder</li>
+</ul>
+<pre><code class="sh">pnc del group-link --name (-n) GroupName --groupfolder (-f) GroupfolderName [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Delete Groupfolder</li>
+</ul>
+<pre><code class="sh">pnc del groupfolder --name (-n) GroupfolderName [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Demote user as group subadmin</li>
+</ul>
+<pre><code class="sh">pnc del group-subadmin --name (-n) GroupName --login UserLogin [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Delete user</li>
+</ul>
+<pre><code class="sh">pnc del user --login (-l) UserLogin [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Get all installed apps</li>
+</ul>
+<pre><code class="sh">pnc get apps [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Get all cloud groups</li>
+</ul>
+<pre><code class="sh">pnc get groups [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Get all Groupfolders</li>
+</ul>
+<pre><code class="sh">pnc get groupfolders [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Get members of the group</li>
+</ul>
+<pre><code class="sh">pnc get group-members --name (-n) GroupName [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Get permissions of the group</li>
+</ul>
+<pre><code class="sh">pnc get group-permissions --name (-n) GroupName --groupfolder (-f) GroupfolderName [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Get subadmins of the group</li>
+</ul>
+<pre><code class="sh">pnc get group-subadmins --name (-n) GroupName [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Get Groupfoldet info</li>
+</ul>
+<pre><code class="sh">pnc get groupfolder --name (-n) GroupfolderName [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>All users of all group folder groups</li>
+</ul>
+<pre><code class="sh">pnc get groupfolder-members --name (-n) GroupfolderName [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Get user details</li>
+</ul>
+<pre><code class="sh">pnc get user --login userLogin [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Search/Get users</li>
+</ul>
+<pre><code class="sh">pnc get users [--search (-s)] UserFullName search string [--limit (-l)] rows count [--offset (-o)] offset from begin [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Add Group to the group  folder</li>
+</ul>
+<pre><code class="sh">pnc add group --name (-n) GroupNeme --groupfolder (-f) GroupfolderName [--permissions (-p)] rcudsa (default r)   [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Add User to the Group</li>
+</ul>
+<pre><code class="sh">pnc add user --name (-n) UserFullName --group (-g) GroupeName --login userLogin   [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Add Users to the Group</li>
+</ul>
+<pre><code class="sh">pnc add users --usersfile (-u) filename.txt in utf-8 --group (-g) GroupeName     [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Set new quota for Groupfolder</li>
+</ul>
+<pre><code class="sh">pnc set groupfolder-quota --name (-n) GroupfolderName --quota (-q) quota in bytes  [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Set new name for groupfolder (rename)</li>
+</ul>
+<pre><code class="sh">pnc set groupfolder-name --name (-n) GroupfolderName --newname (-w) NewFolderName  [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Set permissions for group on groupfolder</li>
+</ul>
+<pre><code class="sh">pnc set group-permissions --name (-n) GroupNeme --groupfolder (-f) GroupfolderName [--permissions (-p)] rcudsa (default r)   [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Set user as group subadmin</li>
+</ul>
+<pre><code class="sh">pnc set group-subadmin --name (-n) GroupNeme --login UserLogin [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Change user parameters</li>
+</ul>
+<pre><code class="sh">pnc set user --login (-l) UserLogin [--password (-p)] new password [--email (-e)] email [--displayname (-i)] display name [--quota (-q)] quota [--phone (-m)] phone [--address (-a)] address [--website (-w)] website [--twitter (-t)] twitter [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Enable user</li>
+</ul>
+<pre><code class="sh">pnc set user-enable --login (-l) UserLogin [--debug (-d)]
+</code></pre>
+
+<ul>
+<li>Disable user</li>
+</ul>
+<pre><code class="sh">pnc set user-disable --login (-l) UserLogin [--debug (-d)]
+</code></pre>
+
+<h2 id="api">API</h2>
+<p>You can use the API in the package to automate administrative tasks associated with the creation and maintenance of group folders, groups and users of the NextClood server.
+There are two different API, for work with NextCloud and for ldap.</p>
+<h3 id="nextcloud-api">NextCloud API</h3>
+<p>It is python class uses osc web API to NextCloud server.</p>
+<pre><code class="python">&gt;&gt;&gt; import pyncli.config
+&gt;&gt;&gt; import pyncli.ocs
+&gt;&gt;&gt; cloud=ocs.Ocs(Config.CLOUD_USER, Config.CLOUD_USER_PWD, Config.CLOUD_BASE_URL)
+&gt;&gt;&gt; cloud.get_apps()
+['encryption',
+ 'theming',
+ 'serverinfo',
+ 'admin_audit',
+ 'files_sharing',
+ ...
+ 'password_policy',
+ 'federation',
+ 'gallery',
+ 'user_ldap',
+ 'groupfolders', 
+ 'contacts']
+&gt;&gt;&gt; cloud.get_groups()
+[&lt;pyncli.ocs.ocs.Group object at 0x04782310&gt;,
+ &lt;pyncli.ocs.ocs.Group object at 0x04782190&gt;,
+ ...
+
+&gt;&gt;&gt; gr=cloud.get_groups()
+&gt;&gt;&gt; for g in gr: 
+...     print(g.info)
+...     
+&lt;Group&gt; &quot;IT&quot;
+&lt;Group&gt; &quot;PHD&quot;
+&lt;Group&gt; &quot;SECURITY&quot;
+&lt;Group&gt; &quot;admin&quot;
+ ...
+
+print(cloud.get_group_folder(1))
+&lt;GroupFolder&gt; (1) &quot;{IT}&quot; quota: -3, size: 36.45g
+  &lt;Group&gt; &quot;IT&quot; [cruds] 
+</code></pre>
+
+<h3 id="ldap-api-litle-wrapper-around-fine-ldap3-library">ldap API (litle wrapper around fine <a href="https://pypi.org/project/ldap3/">ldap3</a> library)</h3>
+<p>If you use ldap backend to NextCloud, it may be useful.</p>
+<h2 id="documentation">Documentation</h2>
+<p>Documentation is available at - <a href="https://pyncli.readthedocs.io" title="see on readthedocs">pyncli documentation</a></p>
+<h2 id="authors">Authors</h2>
+<ul>
+<li><strong>Evgeniy Semenov</strong> - <em>Initial work</em> - <a href="https://github.com/edelwi/">edelwi</a></li>
+</ul>
+<h2 id="license">License</h2>
+<p>This project is licensed under the MIT License - see the <a href="LICENSE">LICENSE</a> file for details</p>
+<h2 id="copyright">Copyright</h2>
+<p>Copyright © 2019-2021. Evgeniy Semenov.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="pyncli/ocs/" class="btn btn-neutral float-right" title="Simple Ocs API">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+      
+        <span style="margin-left: 15px"><a href="pyncli/ocs/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '.';</script>
+    <script src="js/theme.js" defer></script>
+      <script src="search/main.js" defer></script>
+
+</body>
+</html>
+
+<!--
+MkDocs version : 1.0.4
+Build Date UTC : 2021-09-15 12:54:39
+-->

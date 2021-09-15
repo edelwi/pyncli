@@ -6,7 +6,7 @@
 # Author:      Evgeniy Semenov
 #
 # Created:     06.12.2018
-# Copyright:   (c) Evgeniy Semenov 2018-2019
+# Copyright:   (c) Evgeniy Semenov 2018-2021
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 """This module implements little part of the web API for the NextCloud server.
@@ -75,7 +75,7 @@ def human_size(size_in_bytes):
     """
     try:
         size_in_bytes = int(size_in_bytes)
-    except:
+    except ValueError:
         return None  # size_in_bytes
     if size_in_bytes <= MUL[next(iter(MUL))]:
         return str(size_in_bytes)
@@ -92,7 +92,7 @@ def human_permissions(permissions, short=False):
     """
     try:
         permissions = int(permissions)
-    except:
+    except ValueError:
         return None
     if permissions > sum(PERMISSIONS.values()) or permissions < min(
             PERMISSIONS.values()
@@ -1026,7 +1026,10 @@ class Ocs(Base):
 
         self.client = requests.session()
 
-        self._apps = self.get_apps()
+        try:
+            self._apps = self.get_apps()
+        except OperationFailure:
+            exit(1)
         self._apps.append("ocs")
 
         available_classes = set(CLS_MAP.keys())
@@ -1207,6 +1210,7 @@ class Ocs(Base):
             )
             raise OperationFailure("Ocs.put_data error:{e}".format(e=e))
 
+
     def get_apps(self, filter='enabled'):
         """Applications.
 
@@ -1284,18 +1288,25 @@ class Ocs(Base):
             OperationFailure: The operation failed.
         """
         resp = self.get_data(self.URL_GROUPS)
-        x = OcsXmlResponse(resp, "Group")
-        if x.statuscode != "100":
-            Ocs.logger.exception(
-                "An exception was caught in Ocs.get_groups"
-                + " due to negative server response code: {q}".format(
-                    q=x.get_status()
+        cloud_answer = OcsXmlResponse(resp, "Group")
+        if cloud_answer.statuscode == '100':
+            return cloud_answer.data  # successful
+        else:
+            fail_reason = 'unknown error'
+
+            Ocs.logger.error(
+                "An exception was caught in Ocs.get_groups due to "
+                + "negative server response code: {code} - {reason}".format(
+                    code=cloud_answer.statuscode,
+                    reason=fail_reason
                 )
             )
             raise OperationFailure(
-                "Ocs.get_groups response:{e}".format(e=x.get_status())
+                "Ocs.get_groups response: Error: {code} - {reason}".format(
+                    code=cloud_answer.statuscode,
+                    reason=fail_reason
+                )
             )
-        return x.data
 
     def add_user_to_group(self, user_id, group_id):
         """Add user to group.
@@ -1315,7 +1326,6 @@ class Ocs(Base):
             {"groupid": group_id},
         )
         cloud_answer = OcsXmlResponse(resp)
-        fail_reason = ''
         if cloud_answer.statuscode == '100':
             return  # successful
         elif cloud_answer.statuscode == '101':
@@ -1363,7 +1373,6 @@ class Ocs(Base):
             {"groupid": group_id},
         )
         cloud_answer = OcsXmlResponse(resp)
-        fail_reason = ''
         if cloud_answer.statuscode == '100':
             return  # successful
         elif cloud_answer.statuscode == '101':
@@ -1417,15 +1426,45 @@ class Ocs(Base):
                 self.URL_USERS, {"userid": userid, "password": password}
             )
 
-        x = OcsXmlResponse(resp)
-        if x.statuscode != "100":
-            Ocs.logger.exception(
-                "An exception was caught in Ocs.new_user due to "
-                + "negative server response code: {q}".format(q=x.get_status())
+        cloud_answer = OcsXmlResponse(resp)
+        if cloud_answer.statuscode == '100':
+            return  # successful
+        elif cloud_answer.statuscode == '101':
+            fail_reason = 'invalid input data'
+        elif cloud_answer.statuscode == '102':
+            fail_reason = 'username already exists'
+        elif cloud_answer.statuscode == '103':
+            fail_reason = 'unknown error occurred whilst adding the user'
+        elif cloud_answer.statuscode == '104':
+            fail_reason = 'group does not exist'
+        elif cloud_answer.statuscode == '105':
+            fail_reason = 'insufficient privileges for group'
+        elif cloud_answer.statuscode == '106':
+            fail_reason = 'no group specified (required for subadmins)'
+        elif cloud_answer.statuscode == '107':
+            fail_reason = 'all errors that contain a hint - for example “Password is among the 1,000,000 ' \
+                          'most common ones. Please make it unique.”'
+        elif cloud_answer.statuscode == '108':
+            fail_reason = 'password and email empty. Must set password or an email'
+        elif cloud_answer.statuscode == '109':
+            fail_reason = 'invitation email cannot be send'
+        else:
+            fail_reason = 'unknown error'
+
+        Ocs.logger.error(
+            "An exception was caught in Ocs.new_user due to "
+            + "negative server response code: {code} - {reason}".format(
+                code=cloud_answer.statuscode,
+                reason=fail_reason
             )
-            raise OperationFailure(
-                "Ocs.new_user response:{e}".format(e=x.get_status())
+        )
+        raise OperationFailure(
+            "Ocs.new_user Error: {code} - {reason}".format(
+                code=cloud_answer.statuscode,
+                reason=fail_reason
             )
+        )
+
 
     def new_group(self, group_name):
         """To create a group.
@@ -1439,15 +1478,31 @@ class Ocs(Base):
             OperationFailure: The operation failed.
         """
         resp = self.post_data(self.URL_GROUPS, {"groupid": group_name})
-        x = OcsXmlResponse(resp)
-        if x.statuscode != "100":
-            Ocs.logger.exception(
-                "An exception was caught in Ocs.new_group due to "
-                + "negative server response code: {q}".format(q=x.get_status())
+        cloud_answer = OcsXmlResponse(resp)
+        if cloud_answer.statuscode == '100':
+            return  # successful
+        elif cloud_answer.statuscode == '101':
+            fail_reason = 'invalid input data'
+        elif cloud_answer.statuscode == '102':
+            fail_reason = 'group already exists'
+        elif cloud_answer.statuscode == '103':
+            fail_reason = 'failed to add the group'
+        else:
+            fail_reason = 'unknown error'
+
+        Ocs.logger.error(
+            "An exception was caught in Ocs.new_group due to "
+            + "negative server response code: {code} - {reason}".format(
+                code=cloud_answer.statuscode,
+                reason=fail_reason
             )
-            raise OperationFailure(
-                "Ocs.new_group response:{e}".format(e=x.get_status())
+        )
+        raise OperationFailure(
+            "Ocs.new_group Error: {code} - {reason}".format(
+                code=cloud_answer.statuscode,
+                reason=fail_reason
             )
+        )
 
     def get_group_members(self, group_id):
         """Group members.
@@ -1464,16 +1519,26 @@ class Ocs(Base):
             OperationFailure: The operation failed.
         """
         resp = self.get_data(self.URL_GROUPS + "/{grp}".format(grp=group_id))
-        x = OcsXmlResponse(resp, "GroupMembers")
-        if x.statuscode != "100":
-            Ocs.logger.exception(
+        cloud_answer = OcsXmlResponse(resp, "GroupMembers")
+        if cloud_answer.statuscode == '100':
+            return cloud_answer.data  # successful
+        else:
+            fail_reason = 'unknown error'
+
+            Ocs.logger.error(
                 "An exception was caught in Ocs.get_group_members due to "
-                + "negative server response code: {q}".format(q=x.get_status())
+                + "negative server response code: {code} - {reason}".format(
+                    code=cloud_answer.statuscode,
+                    reason=fail_reason
+                )
             )
             raise OperationFailure(
-                "Ocs.get_group_members response:{e}".format(e=x.get_status())
+                "Ocs.get_group_members response: Error: {code} - {reason}".format(
+                    code=cloud_answer.statuscode,
+                    reason=fail_reason
+                )
             )
-        return x.data
+
 
     ##    def search_group(self, group):
     ##        pass
@@ -1498,16 +1563,25 @@ class Ocs(Base):
         parameters = {"search": search, "limit": limit, "offset": offset}
         parameters = {k: v for (k, v) in parameters.items() if v is not None}
         resp = self.get_data(srch + "?" + urllib.parse.urlencode(parameters))
-        x = OcsXmlResponse(resp, "GroupMembers")
-        if x.statuscode != "100":
-            Ocs.logger.exception(
+        cloud_answer = OcsXmlResponse(resp, "GroupMembers")
+        if cloud_answer.statuscode == '100':
+            return cloud_answer.data  # successful
+        else:
+            fail_reason = 'unknown error'
+
+            Ocs.logger.error(
                 "An exception was caught in Ocs.search_user due to "
-                + "negative server response code: {q}".format(q=x.get_status())
+                + "negative server response code: {code} - {reason}".format(
+                    code=cloud_answer.statuscode,
+                    reason=fail_reason
+                )
             )
             raise OperationFailure(
-                "Ocs.search_user response:{e}".format(e=x.get_status())
+                "Ocs.search_user response: Error: {code} - {reason}".format(
+                    code=cloud_answer.statuscode,
+                    reason=fail_reason
+                )
             )
-        return x.data
 
     def get_user(self, user_id):
         """Output information about the user.
@@ -1524,16 +1598,25 @@ class Ocs(Base):
             OperationFailure: The operation failed.
         """
         resp = self.get_data(self.URL_USERS + "/{usr}".format(usr=user_id))
-        x = OcsXmlResponse(resp, "User")
-        if x.statuscode != "100":
-            Ocs.logger.exception(
+        cloud_answer = OcsXmlResponse(resp, "User")
+        if cloud_answer.statuscode == '100':
+            return cloud_answer.data  # successful
+        else:
+            fail_reason = 'unknown error'
+
+            Ocs.logger.error(
                 "An exception was caught in Ocs.get_user due to "
-                + "negative server response code: {q}".format(q=x.get_status())
+                + "negative server response code: {code} - {reason}".format(
+                    code=cloud_answer.statuscode,
+                    reason=fail_reason
+                )
             )
             raise OperationFailure(
-                "Ocs.get_user response:{e}".format(e=x.get_status())
+                "Ocs.get_user response: Error: {code} - {reason}".format(
+                    code=cloud_answer.statuscode,
+                    reason=fail_reason
+                )
             )
-        return x.data
 
     def set_user_parameter(self, user_id, param_name, param_value):
         """Set/change information about the user.
@@ -1567,17 +1650,27 @@ class Ocs(Base):
                 self.URL_USERS + "/{usr}".format(usr=user_id),
                 data_js={"key": param_name, "value": param_value},
             )
-            x = OcsXmlResponse(resp)
-            if x.statuscode != "100":
-                Ocs.logger.exception(
+            cloud_answer = OcsXmlResponse(resp)
+            if cloud_answer.statuscode == '100':
+                return  # successful
+            elif cloud_answer.statuscode == '101':
+                fail_reason = 'user not found'
+            elif cloud_answer.statuscode == '102':
+                fail_reason = 'invalid input data'
+            else:
+                fail_reason = 'unknown error'
+
+                Ocs.logger.error(
                     "An exception was caught in Ocs.set_user due to "
-                    + "negative server response code: {q}".format(
-                        q=x.get_status()
+                    + "negative server response code: {code} - {reason}".format(
+                        code=cloud_answer.statuscode,
+                        reason=fail_reason
                     )
                 )
                 raise OperationFailure(
-                    "Ocs.set_user_parameter response:{e}".format(
-                        e=x.get_status()
+                    "Ocs.set_user response: Error: {code} - {reason}".format(
+                        code=cloud_answer.statuscode,
+                        reason=fail_reason
                     )
                 )
         else:
@@ -1704,18 +1797,29 @@ class Ocs(Base):
         resp = self.get_data(
             self.URL_GROUPS + "/{groupid}/subadmins".format(groupid=group_id)
         )
-        x = OcsXmlResponse(resp, "Subadmins")
-        if x.statuscode != "100":
-            Ocs.logger.exception(
-                "An exception was caught in Ocs.get_group_subadmins"
-                + " due to negative server response code: {q}".format(
-                    q=x.get_status()
+        cloud_answer = OcsXmlResponse(resp, "Subadmins")
+        if cloud_answer.statuscode == '100':
+            return cloud_answer.data  # successful
+        elif cloud_answer.statuscode == '101':
+            fail_reason = 'group does not exist'
+        elif cloud_answer.statuscode == '102':
+            fail_reason = 'unknown failure'
+        else:
+            fail_reason = 'unknown error'
+
+            Ocs.logger.error(
+                "An exception was caught in Ocs.get_group_subadmins due to "
+                + "negative server response code: {code} - {reason}".format(
+                    code=cloud_answer.statuscode,
+                    reason=fail_reason
                 )
             )
             raise OperationFailure(
-                "Ocs.get_group_subadmins response:{e}".format(e=x.get_status())
+                "Ocs.get_group_subadmins response: Error: {code} - {reason}".format(
+                    code=cloud_answer.statuscode,
+                    reason=fail_reason
+                )
             )
-        return x.data
 
     def set_group_subadmins(self, group_id, user_id):
         """Set user as subadmin of the group.
@@ -1733,14 +1837,30 @@ class Ocs(Base):
             self.URL_USERS + "/{user_id}/subadmins".format(user_id=user_id),
             {"groupid": group_id},
         )
-        x = OcsXmlResponse(resp)
-        if x.statuscode != "100":
-            Ocs.logger.exception(
+        cloud_answer = OcsXmlResponse(resp)
+        if cloud_answer.statuscode == '100':
+            return  # successful
+        elif cloud_answer.statuscode == '101':
+            fail_reason = 'user does not exist'
+        elif cloud_answer.statuscode == '102':
+            fail_reason = 'group does not exist'
+        elif cloud_answer.statuscode == '103':
+            fail_reason = 'unknown failure'
+        else:
+            fail_reason = 'unknown error'
+
+            Ocs.logger.error(
                 "An exception was caught in Ocs.set_group_subadmins due to "
-                + "negative server response code: {q}".format(q=x.get_status())
+                + "negative server response code: {code} - {reason}".format(
+                    code=cloud_answer.statuscode,
+                    reason=fail_reason
+                )
             )
             raise OperationFailure(
-                "Ocs.set_group_subadmins response:{e}".format(e=x.get_status())
+                "Ocs.set_group_subadmins response: Error: {code} - {reason}".format(
+                    code=cloud_answer.statuscode,
+                    reason=fail_reason
+                )
             )
 
     def del_group_subadmins(self, group_id, user_id):
@@ -1759,14 +1879,30 @@ class Ocs(Base):
             self.URL_USERS + "/{user_id}/subadmins".format(user_id=user_id),
             {"groupid": group_id},
         )
-        x = OcsXmlResponse(resp)
-        if x.statuscode != "100":
-            Ocs.logger.exception(
+        cloud_answer = OcsXmlResponse(resp)
+        if cloud_answer.statuscode == '100':
+            return  # successful
+        elif cloud_answer.statuscode == '101':
+            fail_reason = 'user does not exist'
+        elif cloud_answer.statuscode == '102':
+            fail_reason = 'user is not a subadmin of the group / group does not exist'
+        elif cloud_answer.statuscode == '103':
+            fail_reason = 'unknown failure'
+        else:
+            fail_reason = 'unknown error'
+
+            Ocs.logger.error(
                 "An exception was caught in Ocs.del_group_subadmins due to "
-                + "negative server response code: {q}".format(q=x.get_status())
+                + "negative server response code: {code} - {reason}".format(
+                    code=cloud_answer.statuscode,
+                    reason=fail_reason
+                )
             )
             raise OperationFailure(
-                "Ocs.del_group_subadmins response:{e}".format(e=x.get_status())
+                "Ocs.del_group_subadmins response: Error: {code} - {reason}".format(
+                    code=cloud_answer.statuscode,
+                    reason=fail_reason
+                )
             )
 
     def remove_group(self, group_id):
@@ -1784,14 +1920,28 @@ class Ocs(Base):
         resp = self.delete_data(
             self.URL_GROUPS + "/{group_id}".format(group_id=group_id), {}
         )
-        x = OcsXmlResponse(resp)
-        if x.statuscode != "100":
-            Ocs.logger.exception(
+        cloud_answer = OcsXmlResponse(resp)
+        if cloud_answer.statuscode == '100':
+            return  # successful
+        elif cloud_answer.statuscode == '101':
+            fail_reason = 'group does not exist'
+        elif cloud_answer.statuscode == '102':
+            fail_reason = 'failed to delete group'
+        else:
+            fail_reason = 'unknown error'
+
+            Ocs.logger.error(
                 "An exception was caught in Ocs.remove_group due to "
-                + "negative server response code: {q}".format(q=x.get_status())
+                + "negative server response code: {code} - {reason}".format(
+                    code=cloud_answer.statuscode,
+                    reason=fail_reason
+                )
             )
             raise OperationFailure(
-                "Ocs.remove_group response:{e}".format(e=x.get_status())
+                "Ocs.remove_group response: Error: {code} - {reason}".format(
+                    code=cloud_answer.statuscode,
+                    reason=fail_reason
+                )
             )
 
     def remove_user(self, userid):
@@ -1808,14 +1958,26 @@ class Ocs(Base):
         resp = self.delete_data(
             self.URL_USERS + "/{user_id}".format(user_id=userid), {}
         )
-        x = OcsXmlResponse(resp)
-        if x.statuscode != "100":
-            Ocs.logger.exception(
+        cloud_answer = OcsXmlResponse(resp)
+        if cloud_answer.statuscode == '100':
+            return  # successful
+        elif cloud_answer.statuscode == '101':
+            fail_reason = 'failure'
+        else:
+            fail_reason = 'unknown error'
+
+            Ocs.logger.error(
                 "An exception was caught in Ocs.remove_user due to "
-                + "negative server response code: {q}".format(q=x.get_status())
+                + "negative server response code: {code} - {reason}".format(
+                    code=cloud_answer.statuscode,
+                    reason=fail_reason
+                )
             )
             raise OperationFailure(
-                "Ocs.remove_user response:{e}".format(e=x.get_status())
+                "Ocs.remove_user response: Error: {code} - {reason}".format(
+                    code=cloud_answer.statuscode,
+                    reason=fail_reason
+                )
             )
 
     def disable_user(self, userid):
@@ -1833,7 +1995,6 @@ class Ocs(Base):
             self.URL_USERS + "/{user_id}/disable".format(user_id=userid), {}
         )
         cloud_answer = OcsXmlResponse(resp)
-        fail_reason = ''
         if cloud_answer.statuscode == "100":
             return  # successful
         elif cloud_answer.statuscode == "101":
@@ -1866,7 +2027,6 @@ class Ocs(Base):
             self.URL_USERS + "/{user_id}/enable".format(user_id=userid), {}
         )
         cloud_answer = OcsXmlResponse(resp)
-        fail_reason = ''
         if cloud_answer.statuscode == "100":
             return  # successful
         elif cloud_answer.statuscode == "101":
@@ -1898,15 +2058,21 @@ class Ocs(Base):
         resp = self.post_data(
             self.URL_APPS + "/{app_id}".format(app_id=appid), {}
         )
-        x = OcsXmlResponse(resp)
-        if x.statuscode != "100":
-            Ocs.logger.exception(
-                "An exception was caught in Ocs.enable_app due to "
-                + "negative server response code: {q}".format(q=x.get_status())
+        cloud_answer = OcsXmlResponse(resp)
+        if cloud_answer.statuscode == "100":
+            return  # successful
+        else:
+            fail_reason = 'unknown error'
+        Ocs.logger.error(
+            "An exception was caught in Ocs.enable_app due to "
+            + "negative server response code: {code} - {reason}".format(
+                code=cloud_answer.statuscode,
+                reason=fail_reason
             )
-            raise OperationFailure(
-                "Ocs.enable_app response:{e}".format(e=x.get_status())
-            )
+        )
+        raise OperationFailure(
+            "Ocs.enable_app error: {code} - {reason}".format(code=cloud_answer.statuscode, reason=fail_reason)
+        )
 
     def disable_app(self, appid):
         """Disable application.
@@ -1922,12 +2088,18 @@ class Ocs(Base):
         resp = self.delete_data(
             self.URL_APPS + "/{app_id}".format(app_id=appid), {}
         )
-        x = OcsXmlResponse(resp)
-        if x.statuscode != "100":
-            Ocs.logger.exception(
-                "An exception was caught in Ocs.disable_app due to "
-                + "negative server response code: {q}".format(q=x.get_status())
+        cloud_answer = OcsXmlResponse(resp)
+        if cloud_answer.statuscode == "100":
+            return  # successful
+        else:
+            fail_reason = 'unknown error'
+        Ocs.logger.error(
+            "An exception was caught in Ocs.disable_app due to "
+            + "negative server response code: {code} - {reason}".format(
+                code=cloud_answer.statuscode,
+                reason=fail_reason
             )
-            raise OperationFailure(
-                "Ocs.disable_app response:{e}".format(e=x.get_status())
-            )
+        )
+        raise OperationFailure(
+            "Ocs.disable_app error: {code} - {reason}".format(code=cloud_answer.statuscode, reason=fail_reason)
+        )

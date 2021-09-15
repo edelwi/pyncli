@@ -6,7 +6,7 @@
 # Author:      Evgeniy Semenov
 #
 # Created:     27.12.2018
-# Copyright:   (c) Evgeniy Semenov 2018-2019
+# Copyright:   (c) Evgeniy Semenov 2018-2021
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 import argparse
@@ -30,13 +30,14 @@ from pyncli.ldap import operate2
 from pyncli.ldap import group
 import logging
 from logging.handlers import RotatingFileHandler
-from pyncli.ldap.admexept import AdminException, OperationFailure, WrongParam
+from pyncli.ldap.admexept import AdminException, OperationFailure, WrongParam, NotFound
 import re
 
+
 PERMISSION_DEFAULT_STR = Config.GF_PERMISSION_DEFAULT_STR  #'r'
-PATTERN_LOGIN_1 = re.compile(r"^[a-zA-Z]+[a-zA-Z0-9-\._]*$", re.IGNORECASE)
+PATTERN_LOGIN_1 = re.compile(r"^[a-zA-Z]+[a-zA-Z0-9-._]*$", re.IGNORECASE)
 PATTERN_LOGIN_2 = re.compile(
-    r"^[a-zA-Z]+[a-zA-Z0-9-\._]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", re.IGNORECASE
+    r"^[a-zA-Z]+[a-zA-Z0-9-._]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", re.IGNORECASE
 )
 PATTERN_QUOTA_1 = re.compile(
     r"(?P<value>\d+\.?\d*)(?P<multiplier>[kmgt]?)", re.IGNORECASE
@@ -328,7 +329,10 @@ def new_group(args):
     except (OperationFailure, WrongParam) as e:
         logger.error("Could not connect to the cloud: {e}".format(e=e.value))
         exit(1)
-    cloud.new_group(group_name)
+    try:
+        cloud.new_group(group_name)
+    except OperationFailure:
+        return
     ncgroup = ocs.Group(group_name)
     if "user_ldap" in cloud._apps and Config.LDAP_USER:
         try:
@@ -469,7 +473,10 @@ def new_user(args):
         return
     params = vars(args)
     params.pop("password", None)
-    cloud.set_user(user_id=login, **params)
+    try:
+        cloud.set_user(user_id=login, **params)
+    except (OperationFailure, WrongParam):
+        pass
 
 
 def del_group_member(args):
@@ -544,19 +551,24 @@ def del_group_member(args):
                     u=login, r=", ".join(x.brief for x in u)
                 )
             )
-
-        cloud_group = cloud.remove_user_from_group(
-            user_id=user_obj_list[0].principal_name, group_id=group_name
-        )
+        try:
+            cloud_group = cloud.remove_user_from_group(
+                user_id=user_obj_list[0].principal_name, group_id=group_name
+            )
+        except OperationFailure:
+            return
         ldap_grp = adm.get_group(
             "{lpr}{gr}{lsu}".format(lpr=LPR, lsu=LSU, gr=group_name), "group"
         )
         adm.remove_users_from_groups(user_obj_list, [ldap_grp])
         return
     elif login and not ldap_ok:
-        cloud_group = cloud.remove_user_from_group(
-            user_id=login, group_id=group_name
-        )
+        try:
+            cloud_group = cloud.remove_user_from_group(
+                user_id=login, group_id=group_name
+            )
+        except OperationFailure:
+            pass
         return
     elif not login and fullname and ldap_ok:
         u = adm.search_users_p(
@@ -578,9 +590,12 @@ def del_group_member(args):
                 )
             )
             return
-        cloud.remove_user_from_group(
-            user_id=user_obj_list[0].principal_name, group_id=group_name
-        )
+        try:
+            cloud.remove_user_from_group(
+                user_id=user_obj_list[0].principal_name, group_id=group_name
+            )
+        except OperationFailure:
+            return
         ldap_grp = adm.get_group(
             "{lpr}{gr}{lsu}".format(lpr=LPR, lsu=LSU, gr=group_name), "group"
         )
@@ -638,7 +653,11 @@ def del_group(args):
     else:
         ldap_ok = False
 
-    cloud.remove_group(group_id=group_name)
+    try:
+        cloud.remove_group(group_id=group_name)
+    except OperationFailure as e:
+        pass
+
     if ldap_ok:
         ldap_grp = group.group(
             "{lpr}{gr}{lsu}".format(lpr=LPR, lsu=LSU, gr=group_name),
@@ -741,7 +760,10 @@ def del_groupfolder(args):
         if gf.mount_point == PREF + groupfolder_name + SUF:
             cloud.remove_group_folder(gfolder_id=gf.id)
             for grp in gf.groups:
-                cloud.remove_group(group_id=grp.group_id)
+                try:
+                    cloud.remove_group(group_id=grp.group_id)
+                except OperationFailure as e:
+                    pass
                 if ldap_ok:
                     ldap_grp = "{lpr}{gr}{lsu}".format(
                         lpr=LPR, lsu=LSU, gr=grp.group_id
@@ -786,8 +808,10 @@ def del_group_subadmins(args):
     except (OperationFailure, WrongParam) as e:
         logger.error("Could not connect to the cloud: {e}".format(e=e.value))
         exit(1)
-
-    cloud.del_group_subadmins(group_name, login)
+    try:
+        cloud.del_group_subadmins(group_name, login)
+    except OperationFailure as e:
+        return
 
 
 def del_user(args):
@@ -812,8 +836,10 @@ def del_user(args):
     except (OperationFailure, WrongParam) as e:
         logger.error("Could not connect to the cloud: {e}".format(e=e.value))
         exit(1)
-
-    cloud.remove_user(login)
+    try:
+        cloud.remove_user(login)
+    except OperationFailure as e:
+        return
 
 
 def add_group(args):
@@ -1168,9 +1194,13 @@ def get_groups(args):
     except (OperationFailure, WrongParam) as e:
         logger.error("Could not connect to the cloud: {e}".format(e=e.value))
         exit(1)
-    groups = cloud.get_groups()
-    for itm in groups:
-        print(itm.info)
+    try:
+        groups = cloud.get_groups()
+    except OperationFailure:
+        pass
+    else:
+        for itm in groups:
+            print(itm.info)
 
 
 def get_group_members(args):
@@ -1188,9 +1218,13 @@ def get_group_members(args):
     except (OperationFailure, WrongParam) as e:
         logger.error("Could not connect to the cloud: {e}".format(e=e.value))
         exit(1)
-    members = cloud.get_group_members(group_name)
-    for itm in members:
-        print(itm)
+    try:
+        members = cloud.get_group_members(group_name)
+    except OperationFailure:
+        pass
+    else:
+        for itm in members:
+            print(itm)
 
 
 def get_group_permissions(args):
@@ -1246,9 +1280,13 @@ def get_group_subadmins(args):
         logger.error("Could not connect to the cloud: {e}".format(e=e.value))
         exit(1)
 
-    resp = cloud.get_group_subadmins(group_id=group_name)
-    for itm in resp:
-        print(itm)
+    try:
+        resp = cloud.get_group_subadmins(group_id=group_name)
+    except OperationFailure as e:
+        return
+    else:
+        for itm in resp:
+            print(itm)
 
 
 def get_groupfolder(args):
@@ -1297,12 +1335,15 @@ def get_users(args):
     except (OperationFailure, WrongParam) as e:
         logger.error("Could not connect to the cloud: {e}".format(e=e.value))
         exit(1)
-
-    answer = cloud.search_user(
-        search=args.search, limit=args.limit, offset=args.offset
-    )
-    for itm in answer:
-        print(itm)
+    try:
+        answer = cloud.search_user(
+            search=args.search, limit=args.limit, offset=args.offset
+        )
+    except OperationFailure:
+        pass
+    else:
+        for itm in answer:
+            print(itm)
 
 
 def get_user(args):
@@ -1356,9 +1397,13 @@ def get_groupfolder_members(args):
         if gf.mount_point == PREF + group_folder_name + SUF:
             for grp in gf.groups:
                 print(grp)
-                members = cloud.get_group_members(grp.group_id)
-                for itm in members:
-                    print(itm)
+                try:
+                    members = cloud.get_group_members(grp.group_id)
+                except OperationFailure:
+                    pass
+                else:
+                    for itm in members:
+                        print(itm)
             return
     else:
         logger.warning(
@@ -1492,8 +1537,10 @@ def set_group_subadmins(args):
     except (OperationFailure, WrongParam) as e:
         logger.error("Could not connect to the cloud: {e}".format(e=e.value))
         exit(1)
-
-    cloud.set_group_subadmins(group_name, login)
+    try:
+        cloud.set_group_subadmins(group_name, login)
+    except OperationFailure as e:
+        return
 
 
 def set_user(args):
@@ -1517,7 +1564,10 @@ def set_user(args):
     except (OperationFailure, WrongParam) as e:
         logger.error("Could not connect to the cloud: {e}".format(e=e.value))
         exit(1)
-    cloud.set_user(user_id=login, **vars(args))
+    try:
+        cloud.set_user(user_id=login, **vars(args))
+    except (OperationFailure, WrongParam):
+        pass
 
 
 def set_user_enable(args):
@@ -1541,7 +1591,10 @@ def set_user_enable(args):
     except (OperationFailure, WrongParam) as e:
         logger.error("Could not connect to the cloud: {e}".format(e=e.value))
         exit(1)
-    cloud.enable_user(login)
+    try:
+        cloud.enable_user(login)
+    except OperationFailure as e:
+        return
 
 
 def set_user_disable(args):
@@ -1565,7 +1618,10 @@ def set_user_disable(args):
     except (OperationFailure, WrongParam) as e:
         logger.error("Could not connect to the cloud: {e}".format(e=e.value))
         exit(1)
-    cloud.disable_user(login)
+    try:
+        cloud.disable_user(login)
+    except OperationFailure as e:
+        return
 
 
 def command_line():
@@ -2300,6 +2356,8 @@ list of commands menu:
         logger
         args = parser.parse_args([args.top, "-h"])
         args.func(args)
+    except OperationFailure as e:
+        pass  # if fail in .set_defaults(func=...)
 
 
 def main():

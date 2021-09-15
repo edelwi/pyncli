@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../../img/favicon.ico">
+  <title>Simple LDAP API - pyncli</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Simple LDAP API";
+    var mkdocs_page_input_path = "pyncli\\ldap.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="../.." class="icon icon-home"> pyncli</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">pyncli.ocs</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../ocs/">Simple Ocs API</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">pyncli.ldap</span>
+    <ul class="subnav">
+                <li class=" current">
+                    
+    <a class="current" href="./">Simple LDAP API</a>
+    <ul class="subnav">
+            
+    </ul>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../..">pyncli</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>pyncli.ldap &raquo;</li>
+        
+      
+    
+    <li>Simple LDAP API</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="pyncli.ldap">pyncli.ldap</h1>
+
+<h2 id="pyncli.ldap.admexept">pyncli.ldap.admexept</h2>
+
+<h3 id="pyncli.ldap.admexept.AdminException">AdminException</h3>
+
+<pre><code class="python">AdminException(self, value)
+</code></pre>
+
+<p>Root package exception class.</p>
+<p>Args:
+    value (str): Description of the exception.</p>
+<h3 id="pyncli.ldap.admexept.NotEnoughParams">NotEnoughParams</h3>
+
+<pre><code class="python">NotEnoughParams(self, value)
+</code></pre>
+
+<p>Exception class called in case of lack of necessary parameters in the
+constructor or method call.</p>
+<p>Args:
+    value (str): Description of the exception.</p>
+<h3 id="pyncli.ldap.admexept.EmptyParam">EmptyParam</h3>
+
+<pre><code class="python">EmptyParam(self, value)
+</code></pre>
+
+<p>Exception class called when a method is called with an empty parameter.</p>
+<p>Args:
+    value (str): Description of the exception.</p>
+<h3 id="pyncli.ldap.admexept.WrongParam">WrongParam</h3>
+
+<pre><code class="python">WrongParam(self, value)
+</code></pre>
+
+<p>The exception class that is called when the method is called as a
+parameter of an invalid type or value.</p>
+<p>Args:
+    value (str): Description of the exception.</p>
+<h3 id="pyncli.ldap.admexept.TooLong">TooLong</h3>
+
+<pre><code class="python">TooLong(self, value)
+</code></pre>
+
+<p>Exception class called when the method is called with an invalid length
+parameter.</p>
+<p>Args:
+    value (str): Description of the exception.</p>
+<h3 id="pyncli.ldap.admexept.ConnectionFailure">ConnectionFailure</h3>
+
+<pre><code class="python">ConnectionFailure(self, value)
+</code></pre>
+
+<p>Exception class called when it is impossible to connect to the specified
+server.</p>
+<p>Args:
+    value (str): Description of the exception.</p>
+<h3 id="pyncli.ldap.admexept.OperationFailure">OperationFailure</h3>
+
+<pre><code class="python">OperationFailure(self, value)
+</code></pre>
+
+<p>Exception class called when it is impossible to perform the specified
+operation.</p>
+<p>Args:
+    value (str): Description of the exception.</p>
+<h3 id="pyncli.ldap.admexept.NotFound">NotFound</h3>
+
+<pre><code class="python">NotFound(self, value)
+</code></pre>
+
+<p>Exception class called in case of problems with the search.</p>
+<p>Called when the desired object was not found.</p>
+<p>Args:
+    value (str): Description of the exception.</p>
+<h2 id="pyncli.ldap.operate2">pyncli.ldap.operate2</h2>
+
+<p>A module that implements the admin class for working with LDAP.</p>
+<h3 id="pyncli.ldap.operate2.admin">admin</h3>
+
+<pre><code class="python">admin(self, ldap_admin, admin_pwd, ldap_server_list)
+</code></pre>
+
+<p>Class for administrative operations</p>
+<h2 id="pyncli.ldap.protogroup">pyncli.ldap.protogroup</h2>
+
+<h3 id="pyncli.ldap.protogroup.protogroup">protogroup</h3>
+
+<pre><code class="python">protogroup(self, name, org_unit, **kwargs)
+</code></pre>
+
+<p>base group class</p>
+<h2 id="pyncli.ldap.group">pyncli.ldap.group</h2>
+
+<h3 id="pyncli.ldap.group.CleanSetAttrMeta">CleanSetAttrMeta</h3>
+
+<pre><code class="python">CleanSetAttrMeta(self, /, *args, **kwargs)
+</code></pre>
+
+<p>Metaclass to change setattr method</p>
+<h3 id="pyncli.ldap.group.group">group</h3>
+
+<pre><code class="python">group(self, name, org_unit='ou=test_ou,dc=example,dc=com', description='', **kwargs)
+</code></pre>
+
+<p>common group class</p>
+<h2 id="pyncli.ldap.protoou">pyncli.ldap.protoou</h2>
+
+<h3 id="pyncli.ldap.protoou.CleanSetAttrMeta">CleanSetAttrMeta</h3>
+
+<pre><code class="python">CleanSetAttrMeta(self, /, *args, **kwargs)
+</code></pre>
+
+<p>Metaclass to change setattr method</p>
+<h3 id="pyncli.ldap.protoou.protoou">protoou</h3>
+
+<pre><code class="python">protoou(self, name, org_unit, **kwargs)
+</code></pre>
+
+<p>base Organisational Unit class</p>
+<h2 id="pyncli.ldap.ou">pyncli.ldap.ou</h2>
+
+<h3 id="pyncli.ldap.ou.ou">ou</h3>
+
+<pre><code class="python">ou(self, name, org_unit='ou=test_ou,dc=example,dc=com', description='', **kwargs)
+</code></pre>
+
+<p>Common Organizational Utit class</p>
+<h2 id="pyncli.ldap.protouser">pyncli.ldap.protouser</h2>
+
+<h3 id="pyncli.ldap.protouser.protouser">protouser</h3>
+
+<pre><code class="python">protouser(self, login, **kwargs)
+</code></pre>
+
+<p>Base user class</p>
+<h2 id="pyncli.ldap.user">pyncli.ldap.user</h2>
+
+<h3 id="pyncli.ldap.user.CleanSetAttrMeta">CleanSetAttrMeta</h3>
+
+<pre><code class="python">CleanSetAttrMeta(self, /, *args, **kwargs)
+</code></pre>
+
+<p>Metaclass to change setattr method</p>
+<h3 id="pyncli.ldap.user.user">user</h3>
+
+<pre><code class="python">user(self, login, uid='', org_unit='OU=test,DC=example,DC=com', surname='', first_name='', middle_name='', company='', department='', division='', position='', mail='', mobile='', other_mailbox='0', other_mobile='0', comment='', employee_type='', acc_control=[&lt;uac.NORMAL_ACCOUNT: 512&gt;, &lt;uac.ACCOUNTDISABLE: 2&gt;], description='', principal_name='', **kwargs)
+</code></pre>
+
+<p>Common user class</p>
+<h2 id="pyncli.ldap.uac.uac">uac</h2>
+
+<pre><code class="python">uac(self, /, *args, **kwargs)
+</code></pre>
+
+<p>userAccountControl Enumerator class</p>
+<h3 id="pyncli.ldap.uac.uac.ACCOUNTDISABLE">ACCOUNTDISABLE</h3>
+
+<p>userAccountControl Enumerator class</p>
+<h3 id="pyncli.ldap.uac.uac.DONT_EXPIRE_PASSWORD">DONT_EXPIRE_PASSWORD</h3>
+
+<p>userAccountControl Enumerator class</p>
+<h3 id="pyncli.ldap.uac.uac.DONT_REQ_PREAUTH">DONT_REQ_PREAUTH</h3>
+
+<p>userAccountControl Enumerator class</p>
+<h3 id="pyncli.ldap.uac.uac.ENCRYPTED_TEXT_PWD_ALLOWED">ENCRYPTED_TEXT_PWD_ALLOWED</h3>
+
+<p>userAccountControl Enumerator class</p>
+<h3 id="pyncli.ldap.uac.uac.hex">hex</h3>
+
+<p>Get hex representation of uac instance</p>
+<p>Returns:
+    (str): hex representation of uac instance</p>
+<h3 id="pyncli.ldap.uac.uac.HOMEDIR_REQUIRED">HOMEDIR_REQUIRED</h3>
+
+<p>userAccountControl Enumerator class</p>
+<h3 id="pyncli.ldap.uac.uac.INTERDOMAIN_TRUST_ACCOUNT">INTERDOMAIN_TRUST_ACCOUNT</h3>
+
+<p>userAccountControl Enumerator class</p>
+<h3 id="pyncli.ldap.uac.uac.LOCKOUT">LOCKOUT</h3>
+
+<p>userAccountControl Enumerator class</p>
+<h3 id="pyncli.ldap.uac.uac.MNS_LOGON_ACCOUNT">MNS_LOGON_ACCOUNT</h3>
+
+<p>userAccountControl Enumerator class</p>
+<h3 id="pyncli.ldap.uac.uac.NORMAL_ACCOUNT">NORMAL_ACCOUNT</h3>
+
+<p>userAccountControl Enumerator class</p>
+<h3 id="pyncli.ldap.uac.uac.NOT_DELEGATED">NOT_DELEGATED</h3>
+
+<p>userAccountControl Enumerator class</p>
+<h3 id="pyncli.ldap.uac.uac.PASSWD_CANT_CHANGE">PASSWD_CANT_CHANGE</h3>
+
+<p>userAccountControl Enumerator class</p>
+<h3 id="pyncli.ldap.uac.uac.PASSWD_NOTREQD">PASSWD_NOTREQD</h3>
+
+<p>userAccountControl Enumerator class</p>
+<h3 id="pyncli.ldap.uac.uac.PASSWORD_EXPIRED">PASSWORD_EXPIRED</h3>
+
+<p>userAccountControl Enumerator class</p>
+<h3 id="pyncli.ldap.uac.uac.SCRIPT">SCRIPT</h3>
+
+<p>userAccountControl Enumerator class</p>
+<h3 id="pyncli.ldap.uac.uac.SERVER_TRUST_ACCOUNT">SERVER_TRUST_ACCOUNT</h3>
+
+<p>userAccountControl Enumerator class</p>
+<h3 id="pyncli.ldap.uac.uac.SMARTCARD_REQUIRED">SMARTCARD_REQUIRED</h3>
+
+<p>userAccountControl Enumerator class</p>
+<h3 id="pyncli.ldap.uac.uac.TEMP_DUPLICATE_ACCOUNT">TEMP_DUPLICATE_ACCOUNT</h3>
+
+<p>userAccountControl Enumerator class</p>
+<h3 id="pyncli.ldap.uac.uac.TRUSTED_FOR_DELEGATION">TRUSTED_FOR_DELEGATION</h3>
+
+<p>userAccountControl Enumerator class</p>
+<h3 id="pyncli.ldap.uac.uac.TRUSTED_TO_AUTH_FOR_DELEGATION">TRUSTED_TO_AUTH_FOR_DELEGATION</h3>
+
+<p>userAccountControl Enumerator class</p>
+<h3 id="pyncli.ldap.uac.uac.USE_DES_KEY_ONLY">USE_DES_KEY_ONLY</h3>
+
+<p>userAccountControl Enumerator class</p>
+<h3 id="pyncli.ldap.uac.uac.val">val</h3>
+
+<p>Get value of uac instance</p>
+<p>Returns:
+    (int): value of uac instance</p>
+<h3 id="pyncli.ldap.uac.uac.WORKSTATION_TRUST_ACCOUNT">WORKSTATION_TRUST_ACCOUNT</h3>
+
+<p>userAccountControl Enumerator class</p>
+<h3 id="pyncli.ldap.uac.uac.get_status">get_status</h3>
+
+<pre><code class="python">uac.get_status(hex_status_code)
+</code></pre>
+
+<p>Get a list of userAccountControl flags names.</p>
+<p>Args:
+    hex_status_code (str): userAccountControl hex value</p>
+<p>Returns:
+    (list): userAccountControl flags names.</p>
+<h3 id="pyncli.ldap.uac.uac.get_uac">get_uac</h3>
+
+<pre><code class="python">uac.get_uac(hex_status_code)
+</code></pre>
+
+<p>Get a list of userAccountControl flags.</p>
+<p>Args:
+    hex_status_code (str): userAccountControl hex value</p>
+<p>Returns:
+    (list): userAccountControl flags.</p>
+<h3 id="pyncli.ldap.uac.uac.get_control">get_control</h3>
+
+<pre><code class="python">uac.get_control(flag_list)
+</code></pre>
+
+<p>Get userAccountControl value.</p>
+<p>Args:
+    flag_list (list): userAccountControl list</p>
+<p>Returns:
+    (list): userAccountControl hex value or False.</p>
+<h2 id="pyncli.ldap.utill">pyncli.ldap.utill</h2>
+
+<p>Module with auxiliary functions.</p>
+<h3 id="pyncli.ldap.utill.download_file">download_file</h3>
+
+<pre><code class="python">download_file(url, local_path, user, pwd)
+</code></pre>
+
+<p>Download file</p>
+<p>Downloads a file with basic authentication.</p>
+<p>Args:
+    url (str): URL
+    local_path (str): file full name
+    user (str): user name
+    pwd (str): password</p>
+<p>Returns:
+    (str): file full name</p>
+<p>Raises:
+    ConnectionFailure: connection failure</p>
+<h3 id="pyncli.ldap.utill.upload_file">upload_file</h3>
+
+<pre><code class="python">upload_file(url, data, login, pwd)
+</code></pre>
+
+<p>Upload file</p>
+<p>Uploads a file with basic authentication.</p>
+<p>Args:
+    url (str): URL
+    data (str): string or buffer to load
+    login (str): user name
+    pwd (str): password</p>
+<p>Returns:
+    (str): file full name</p>
+<p>Raises:
+    OperationFailure: operation failure</p>
+<h3 id="pyncli.ldap.utill.mailto">mailto</h3>
+
+<pre><code class="python">mailto(msg_from, msg_to_list, smpt, subject, text)
+</code></pre>
+
+<p>Simple mailto function</p>
+<p>Sends a message to one or a group of recipients.</p>
+<p>Args:
+    msg_from (str): From whom
+    msg_to_list (list): List of email recipients.
+    smpt (str): SMTP server name or IP
+    subject (str): subject of the message
+    text (str): text of the message</p>
+<p>Raises:
+    ConnectionFailure: connection failure</p>
+<h3 id="pyncli.ldap.utill.trim">trim</h3>
+
+<pre><code class="python">trim(text)
+</code></pre>
+
+<p>Removes extra spaces from text.</p>
+<p>Args:
+    text (str): text</p>
+<p>Returns:
+    (str): processed text</p>
+<h3 id="pyncli.ldap.utill.trim_low">trim_low</h3>
+
+<pre><code class="python">trim_low(text)
+</code></pre>
+
+<p>Removes extra spaces from text and set it to lower case.</p>
+<p>Args:
+    text (str): text</p>
+<p>Returns:
+    (str): processed text</p>
+<h3 id="pyncli.ldap.utill.split_names">split_names</h3>
+
+<pre><code class="python">split_names(fullname)
+</code></pre>
+
+<p>Splits user fullname by surname, first name and middle name.</p>
+<p>Args:
+    fullname (str): full name (The first word is considered the surname,
+        the second first name, all the rest go to the middle name. This
+        is the Russian name record format.)</p>
+<p>Returns:
+    (dict): Dictionary with surname, first name and middle name as
+        values.</p>
+<h3 id="pyncli.ldap.utill.date_str_to_generalize_time">date_str_to_generalize_time</h3>
+
+<pre><code class="python">date_str_to_generalize_time(date_str)
+</code></pre>
+
+<p>Converts date in string format to date in generalized time format.</p>
+<p>Args:
+    date_str (str): Date string in formats %Y-%m-%d, %Y/%m/%d or %d.%m.%Y</p>
+<p>Returns:
+    (str): Date in generalized time format.</p>
+<p>Note:
+    Time zone information is not supported.</p>
+<h3 id="pyncli.ldap.utill.is_generalized_time">is_generalized_time</h3>
+
+<pre><code class="python">is_generalized_time(date_str)
+</code></pre>
+
+<p>Checks is this string look like generalized time.</p>
+<p>Args:
+    date_str (str): Date string</p>
+<p>Returns:
+    (bool): True if input string is generalized time.</p>
+<p>Note:
+    Time zone information is not supported.</p>
+<h3 id="pyncli.ldap.utill.generalized_time_to_datetime">generalized_time_to_datetime</h3>
+
+<pre><code class="python">generalized_time_to_datetime(gen_time)
+</code></pre>
+
+<p>Converts date in generalized time format to datetime</p>
+<p>Args:
+    gen_time (str): Date string in generalized time format</p>
+<p>Returns:
+    (datetime): datetime object</p>
+<p>Note:
+    Time zone information is not supported.</p>
+<h3 id="pyncli.ldap.utill.datetime_to_generalized_time">datetime_to_generalized_time</h3>
+
+<pre><code class="python">datetime_to_generalized_time(date_time)
+</code></pre>
+
+<p>Converts datetime to generalized time format.</p>
+<p>Args:
+    date_time (datetime): datetime object</p>
+<p>Returns:
+    (str): Date in generalized time format.</p>
+<p>Note:
+    Time zone information is not supported.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="../ocs/" class="btn btn-neutral" title="Simple Ocs API"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../ocs/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+    </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+
+</body>
+</html>

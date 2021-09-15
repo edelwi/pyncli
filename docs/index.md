@@ -285,7 +285,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Copyright
 
-Copyright © 2019. Evgeniy Semenov.
+Copyright © 2019-2021. Evgeniy Semenov.
 
 [coverage-image]: https://codecov.io/gh/edelwi/pyncli/branch/master/graph/badge.svg
 [coverage-url]: https://codecov.io/gh/edelwi/pyncli

@@ -2,3 +2,11 @@
 *.log
 *.pyc
 /pyncli/test/.coverage
+/build/*
+/_build/*
+/pyncli.egg-info/*
+/build.bat
+/build_doc.bat
+/reenv.bat
+/upload_dist_on_pypi_test.bat
+/pyncli/.idea/*

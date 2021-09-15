@@ -32,12 +32,13 @@ pages:
 - Home: index.md << README.md
 - pyncli.ocs:
   - Simple Ocs API: pyncli/ocs.md
+- pyncli.ldap:  
   - Simple LDAP API: pyncli/ldap.md
 
 # These options all show off their default values. You don't have to add
 # them to your configuration if you're fine with the default.
 docs_dir: sources
-gens_dir: _build/pydocmd     # This will end up as the MkDocs 'docs_dir'
+gens_dir: docs     # This will end up as the MkDocs 'docs_dir'
 site_dir: _build/site
 theme:    readthedocs
 loader:   pydocmd.loader.PythonLoader

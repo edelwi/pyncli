@@ -193,7 +193,7 @@ Metaclass to change setattr method
 <h3 id="pyncli.ldap.user.user">user</h3>
 
 ```python
-user(self, login, uid='', org_unit='OU=test,DC=example,DC=com', surname='', first_name='', middle_name='', company='', department='', division='', position='', mail='', mobile='', other_mailbox='0', other_mobile='0', comment='', employee_type='', acc_control=[<uac.NORMAL_ACCOUNT: 512>, <uac.ACCOUNTDISABLE: 2>], description='', **kwargs)
+user(self, login, uid='', org_unit='OU=test,DC=example,DC=com', surname='', first_name='', middle_name='', company='', department='', division='', position='', mail='', mobile='', other_mailbox='0', other_mobile='0', comment='', employee_type='', acc_control=[<uac.NORMAL_ACCOUNT: 512>, <uac.ACCOUNTDISABLE: 2>], description='', principal_name='', **kwargs)
 ```
 
 Common user class
