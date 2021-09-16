@@ -951,6 +951,7 @@ def add_user(args):
             user_obj_list.append(u[0])
         elif len(u) == 0:
             logger.warning('User "{u}" not found. Skip it.'.format(u=login))
+            return
         else:
             logger.warning(
                 'Searching for user "{u}" returned an ambiguous result: {r}. This should not be!'.format(
