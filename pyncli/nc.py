@@ -1095,7 +1095,8 @@ def add_users(args):
         elif "login" in usr and ldap_ok:
             if "@" in usr["login"]:
                 u = adm.search_users_p(
-                    "(&(objectClass=user)(userPrincipalName={login})(!(UserAccountControl:1.2.840.113556.1.4.803:=2)))".format(
+                    "(&(objectClass=user)(userPrincipalName="
+                    "{login})(!(UserAccountControl:1.2.840.113556.1.4.803:=2)))".format(
                         login=usr["login"]
                     ),
                     base=Config.LDAP_BASE_DN,
@@ -1103,7 +1104,8 @@ def add_users(args):
                 )
             else:
                 u = adm.search_users_p(
-                    "(&(objectClass=user)(sAMAccountName={login})(!(UserAccountControl:1.2.840.113556.1.4.803:=2)))".format(
+                    "(&(objectClass=user)(sAMAccountName="
+                    "{login})(!(UserAccountControl:1.2.840.113556.1.4.803:=2)))".format(
                         login=usr["login"]
                     ),
                     base=Config.LDAP_BASE_DN,

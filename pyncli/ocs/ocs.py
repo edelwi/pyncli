@@ -198,8 +198,8 @@ class GroupFolder(Comparer):
         out = '<GroupFolder> ({id}) "{mp}" quota: {q}, size: {s}\n'.format(
             mp=self.mount_point,
             id=self.id,
-            q=human_size(self.quota),
-            s=human_size(self.size),
+            q=human_size(self.quota) if self.quota else self.quota,
+            s=human_size(self.size) if self.size else self.size,
         )
         for it in self.groups:
             out += "  {grp}\n".format(grp=it.__str__())
