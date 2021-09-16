@@ -938,7 +938,19 @@ class GroupFolderMixin(object):
                 )
                 self.new_group(grp.group_id)
 
+                # 4 link group
+                Ocs.logger.debug(
+                    "Grants group {g} access".format(g=grp.group_id)
+                    + " to the group folder {p} ({id}).".format(
+                        p=group_folder_obj.mount_point, id=group_folder_obj.id
+                    )
+                )
+                self.grant_access_to_group_folder(
+                    group_folder_obj.id, grp.group_id
+                )
+
                 # 3 add permissions
+                # если права назначать до линкования группы то они точно не применяются (хотя приходит 100)
                 Ocs.logger.debug(
                     "Add group {g} permissions {r} ".format(
                         g=grp.group_id, r=grp.permissions
@@ -951,16 +963,7 @@ class GroupFolderMixin(object):
                     group_folder_obj.id, grp.group_id, grp.permissions
                 )
 
-                # 4 link group
-                Ocs.logger.debug(
-                    "Grants group {g} access".format(g=grp.group_id)
-                    + " to the group folder {p} ({id}).".format(
-                        p=group_folder_obj.mount_point, id=group_folder_obj.id
-                    )
-                )
-                self.grant_access_to_group_folder(
-                    group_folder_obj.id, grp.group_id
-                )
+
 
             # 5 add quota
             Ocs.logger.debug(
