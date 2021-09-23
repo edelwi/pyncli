@@ -654,7 +654,8 @@ class GroupFolderMixin(object):
             raise OperationFailure(
                 "Ocs.set_group_folder_quota response:{e}".format(
                     e=x.get_status()
-                )
+                ),
+                code=x.statuscode
             )
 
     def set_group_folder_group_permissions(
@@ -696,7 +697,8 @@ class GroupFolderMixin(object):
             raise OperationFailure(
                 "Ocs.set_group_folder_group_permissions response:{e}".format(
                     e=x.get_status()
-                )
+                ),
+                code=x.statuscode
             )
 
     def grant_access_to_group_folder(self, gfolder_id, group_id):
@@ -727,7 +729,8 @@ class GroupFolderMixin(object):
             raise OperationFailure(
                 "Ocs.grant_access_to_group_folder response:{e}".format(
                     e=x.get_status()
-                )
+                ),
+                code=x.statuscode
             )
 
     def revoke_access_to_group_folder(self, gfolder_id, group_id):
@@ -760,7 +763,8 @@ class GroupFolderMixin(object):
             raise OperationFailure(
                 "Ocs.revoke_access_to_group_folder response:{e}".format(
                     e=x.get_status()
-                )
+                ),
+                code=x.statuscode
             )
 
     def rename_group_folder(self, gfolder_id, new_name):
@@ -789,7 +793,8 @@ class GroupFolderMixin(object):
                 )
             )
             raise OperationFailure(
-                "Ocs.rename_group_folder response:{e}".format(e=x.get_status())
+                "Ocs.rename_group_folder response:{e}".format(e=x.get_status()),
+                code=x.statuscode
             )
 
     def new_group_folder(self, mountpoint):
@@ -816,7 +821,8 @@ class GroupFolderMixin(object):
                 )
             )
             raise OperationFailure(
-                "Ocs.new_group_folder response:{e}".format(e=x.get_status())
+                "Ocs.new_group_folder response:{e}".format(e=x.get_status()),
+                code=x.statuscode
             )
         return x.data[0].id
 
@@ -844,7 +850,8 @@ class GroupFolderMixin(object):
                 )
             )
             raise OperationFailure(
-                "Ocs.remove_group_folder response:{e}".format(e=x.get_status())
+                "Ocs.remove_group_folder response:{e}".format(e=x.get_status()),
+                code=x.statuscode
             )
 
     def get_group_folders(self):
@@ -868,7 +875,8 @@ class GroupFolderMixin(object):
                 )
             )
             raise OperationFailure(
-                "Ocs.get_group_folders response:{e}".format(e=x.get_status())
+                "Ocs.get_group_folders response:{e}".format(e=x.get_status()),
+                code=x.statuscode
             )
         return x.data
 
@@ -896,7 +904,8 @@ class GroupFolderMixin(object):
                 )
             )
             raise OperationFailure(
-                "Ocs.get_group_folder response:{e}".format(e=x.get_status())
+                "Ocs.get_group_folder response:{e}".format(e=x.get_status()),
+                code=x.statuscode
             )
         return x.data[0]
 
@@ -1331,18 +1340,8 @@ class Ocs(Base):
         cloud_answer = OcsXmlResponse(resp)
         if cloud_answer.statuscode == '100':
             return  # successful
-        elif cloud_answer.statuscode == '101':
-            fail_reason = 'no group specified'
-        elif cloud_answer.statuscode == '102':
-            fail_reason = 'group does not exist'
-        elif cloud_answer.statuscode == '103':
-            fail_reason = 'user does not exist'
-        elif cloud_answer.statuscode == '104':
-            fail_reason = 'insufficient privileges'
-        elif cloud_answer.statuscode == '105':
-            fail_reason = 'failed to add user to group'
         else:
-            fail_reason = 'unknown error'
+            fail_reason = self._get_add_user_fail_status(cloud_answer.statuscode)
 
         Ocs.logger.error(
             "An exception was caught in Ocs.add_user_to_group due to "
@@ -1355,8 +1354,97 @@ class Ocs(Base):
             "Ocs.add_user_to_group response: Error: {code} - {reason}".format(
                 code=cloud_answer.statuscode,
                 reason=fail_reason
+            ),
+            code=cloud_answer.statuscode
+        )
+
+    def add_user_to_group_alt_upn(self, user_id, group_id, fallback_upn_suffix):
+        """Add user to group.
+
+        Adds a user with user_id to group group_id, if user_id is not found replace UPN suffix by fallback_upn_suffix
+            and try again.
+
+        Args:
+            user_id (str): The user ID of the cloud (like bill or
+                bill@example.com when ldap backend used).
+            group_id (str): Group ID (group name).
+            fallback_upn_suffix (str): Alternative UPN suffix.
+
+        Raises:
+            OperationFailure: The operation failed.
+        """
+        resp = self.post_data(
+            self.URL_USERS + "/{user_id}/groups".format(user_id=user_id),
+            {"groupid": group_id},
+        )
+        cloud_answer = OcsXmlResponse(resp)
+        if cloud_answer.statuscode == '100':
+            return  # successful
+        else:
+            fail_reason = self._get_add_user_fail_status(cloud_answer.statuscode)
+
+        if cloud_answer.statuscode == '103':
+            try:
+                upn_suffix = user_id.principal_name.split('@')[1]
+            except IndexError:
+                pass  # No any ways
+            else:
+                if upn_suffix != fallback_upn_suffix:
+                    usr_with_alt_upn = user_id.principal_name.replace(upn_suffix, fallback_upn_suffix)
+                    resp = self.post_data(
+                        self.URL_USERS + "/{user_id}/groups".format(user_id=usr_with_alt_upn),
+                        {"groupid": group_id},
+                    )
+                    cloud_answer = OcsXmlResponse(resp)
+                    if cloud_answer.statuscode == '100':
+                        return  # successful
+                    else:
+                        fail_reason = self._get_add_user_fail_status(cloud_answer.statuscode)
+
+        Ocs.logger.error(
+            "An exception was caught in Ocs.add_user_to_group due to "
+            + "negative server response code: {code} - {reason}".format(
+                code=cloud_answer.statuscode,
+                reason=fail_reason
             )
         )
+        raise OperationFailure(
+            "Ocs.add_user_to_group response: Error: {code} - {reason}".format(
+                code=cloud_answer.statuscode,
+                reason=fail_reason
+            ),
+            code=cloud_answer.statuscode
+        )
+
+    @staticmethod
+    def _get_add_user_fail_status(statuscode: str) -> str:
+        if statuscode == '101':
+            return 'no group specified'
+        elif statuscode == '102':
+            return 'group does not exist'
+        elif statuscode == '103':
+            return 'user does not exist'
+        elif statuscode == '104':
+            return 'insufficient privileges'
+        elif statuscode == '105':
+            return 'failed to add user to group'
+        else:
+            return 'unknown error'
+
+    @staticmethod
+    def _get_remove_user_fail_status(statuscode: str) -> str:
+        if statuscode == '101':
+            return 'no group specified'
+        elif statuscode == '102':
+            return 'group does not exist'
+        elif statuscode == '103':
+            return 'user does not exist'
+        elif statuscode == '104':
+            return 'insufficient privileges'
+        elif statuscode == '105':
+            return 'failed to remove user from group'
+        else:
+            return 'unknown error'
 
     def remove_user_from_group(self, user_id, group_id):
         """Remove user from group.
@@ -1378,18 +1466,8 @@ class Ocs(Base):
         cloud_answer = OcsXmlResponse(resp)
         if cloud_answer.statuscode == '100':
             return  # successful
-        elif cloud_answer.statuscode == '101':
-            fail_reason = 'no group specified'
-        elif cloud_answer.statuscode == '102':
-            fail_reason = 'group does not exist'
-        elif cloud_answer.statuscode == '103':
-            fail_reason = 'user does not exist'
-        elif cloud_answer.statuscode == '104':
-            fail_reason = 'insufficient privileges'
-        elif cloud_answer.statuscode == '105':
-            fail_reason = 'failed to remove user from group'
         else:
-            fail_reason = 'unknown error'
+            fail_reason = self._get_remove_user_fail_status(cloud_answer.statuscode)
 
         Ocs.logger.error(
             "An exception was caught in Ocs.remove_user_from_group due to "
@@ -1402,7 +1480,66 @@ class Ocs(Base):
             "Ocs.remove_user_from_group Error: {code} - {reason}".format(
                 code=cloud_answer.statuscode,
                 reason=fail_reason
+            ),
+            code=cloud_answer.statuscode
+        )
+
+    def remove_user_from_group_alt_upn(self, user_id, group_id, fallback_upn_suffix):
+        """Remove user from group.
+
+        Removes the user with user_id from group group_id, if user_id is not found replace UPN suffix by fallback_upn_suffix
+            and try again.
+
+        Args:
+            user_id (str): The user ID of the cloud (like bill or
+                bill@example.com when ldap backend used).
+            group_id (str): Group ID (group name).
+            fallback_upn_suffix (str): Alternative UPN suffix.
+
+        Raises:
+            OperationFailure: The operation failed.
+        """
+        resp = self.delete_data(
+            self.URL_USERS + "/{user_id}/groups".format(user_id=user_id),
+            {"groupid": group_id},
+        )
+        cloud_answer = OcsXmlResponse(resp)
+        if cloud_answer.statuscode == '100':
+            return  # successful
+        else:
+            fail_reason = self._get_remove_user_fail_status(cloud_answer.statuscode)
+
+        if cloud_answer.statuscode == '103':
+            try:
+                upn_suffix = user_id.principal_name.split('@')[1]
+            except IndexError:
+                pass  # No any ways
+            else:
+                if upn_suffix != fallback_upn_suffix:
+                    usr_with_alt_upn = user_id.principal_name.replace(upn_suffix, fallback_upn_suffix)
+                    resp = self.delete_data(
+                        self.URL_USERS + "/{user_id}/groups".format(user_id=usr_with_alt_upn),
+                        {"groupid": group_id},
+                    )
+                    cloud_answer = OcsXmlResponse(resp)
+                    if cloud_answer.statuscode == '100':
+                        return  # successful
+                    else:
+                        fail_reason = self._get_remove_user_fail_status(cloud_answer.statuscode)
+
+        Ocs.logger.error(
+            "An exception was caught in Ocs.remove_user_from_group due to "
+            + "negative server response code: {code} - {reason}".format(
+                code=cloud_answer.statuscode,
+                reason=fail_reason
             )
+        )
+        raise OperationFailure(
+            "Ocs.remove_user_from_group Error: {code} - {reason}".format(
+                code=cloud_answer.statuscode,
+                reason=fail_reason
+            ),
+            code=cloud_answer.statuscode
         )
 
     def new_user(self, userid, password, groups=[]):
@@ -1465,7 +1602,8 @@ class Ocs(Base):
             "Ocs.new_user Error: {code} - {reason}".format(
                 code=cloud_answer.statuscode,
                 reason=fail_reason
-            )
+            ),
+            code=cloud_answer.statuscode
         )
 
 
@@ -1504,7 +1642,8 @@ class Ocs(Base):
             "Ocs.new_group Error: {code} - {reason}".format(
                 code=cloud_answer.statuscode,
                 reason=fail_reason
-            )
+            ),
+            code=cloud_answer.statuscode
         )
 
     def get_group_members(self, group_id):
@@ -1539,7 +1678,8 @@ class Ocs(Base):
                 "Ocs.get_group_members response: Error: {code} - {reason}".format(
                     code=cloud_answer.statuscode,
                     reason=fail_reason
-                )
+                ),
+                code=cloud_answer.statuscode
             )
 
 
@@ -1583,7 +1723,8 @@ class Ocs(Base):
                 "Ocs.search_user response: Error: {code} - {reason}".format(
                     code=cloud_answer.statuscode,
                     reason=fail_reason
-                )
+                ),
+                code=cloud_answer.statuscode
             )
 
     def get_user(self, user_id):
@@ -1618,8 +1759,18 @@ class Ocs(Base):
                 "Ocs.get_user response: Error: {code} - {reason}".format(
                     code=cloud_answer.statuscode,
                     reason=fail_reason
-                )
+                ),
+                code=cloud_answer.statuscode
             )
+
+    @staticmethod
+    def _get_set_user_parameter_fail_status(statuscode: str) -> str:
+        if statuscode == '101':
+            return 'user not found'
+        elif statuscode == '102':
+            return 'invalid input data'
+        else:
+            return 'unknown error'
 
     def set_user_parameter(self, user_id, param_name, param_value):
         """Set/change information about the user.
@@ -1632,7 +1783,7 @@ class Ocs(Base):
             param_name (str): users parameter name (supported parameters:
                 'email','quota','displayname','phone','address','website',
                 'twitter','password')
-            param_value (str): quota
+            param_value (str): new value
 
         Raises:
             OperationFailure: The operation failed.
@@ -1656,12 +1807,8 @@ class Ocs(Base):
             cloud_answer = OcsXmlResponse(resp)
             if cloud_answer.statuscode == '100':
                 return  # successful
-            elif cloud_answer.statuscode == '101':
-                fail_reason = 'user not found'
-            elif cloud_answer.statuscode == '102':
-                fail_reason = 'invalid input data'
             else:
-                fail_reason = 'unknown error'
+                fail_reason = self._get_set_user_parameter_fail_status(cloud_answer.statuscode)
 
                 Ocs.logger.error(
                     "An exception was caught in Ocs.set_user due to "
@@ -1674,7 +1821,8 @@ class Ocs(Base):
                     "Ocs.set_user response: Error: {code} - {reason}".format(
                         code=cloud_answer.statuscode,
                         reason=fail_reason
-                    )
+                    ),
+                    code=cloud_answer.statuscode
                 )
         else:
             raise WrongParam(
@@ -1682,6 +1830,87 @@ class Ocs(Base):
                     e=param_name
                 )
             )
+
+    def set_user_parameter_alt_upn(self, user_id, param_name, param_value, fallback_upn_suffix):
+        """Set/change information about the user.
+
+        Edits attributes related to a user. Users are able to edit email,
+        displayname and password; admins can also edit the quota value.
+        If user_id is not found replace UPN suffix by fallback_upn_suffix
+        and try again.
+
+        Args:
+            user_id (str): User ID (login).
+            param_name (str): users parameter name (supported parameters:
+                'email','quota','displayname','phone','address','website',
+                'twitter','password')
+            param_value (str): new value
+            fallback_upn_suffix (str): Alternative UPN suffix.
+
+        Raises:
+            OperationFailure: The operation failed.
+            WrongParam: No any parameters to change
+        """
+        parameters = [
+            "email",
+            "quota",
+            "displayname",
+            "phone",
+            "address",
+            "website",
+            "twitter",
+            "password",
+        ]
+        if param_name in parameters:
+            resp = self.put_data(
+                self.URL_USERS + "/{usr}".format(usr=user_id),
+                data_js={"key": param_name, "value": param_value},
+            )
+            cloud_answer = OcsXmlResponse(resp)
+            if cloud_answer.statuscode == '100':
+                return  # successful
+            else:
+                fail_reason = self._get_set_user_parameter_fail_status(cloud_answer.statuscode)
+
+                if cloud_answer.statuscode == '101':
+                    try:
+                        upn_suffix = user_id.principal_name.split('@')[1]
+                    except IndexError:
+                        pass  # No any ways
+                    else:
+                        if upn_suffix != fallback_upn_suffix:
+                            usr_with_alt_upn = user_id.principal_name.replace(upn_suffix, fallback_upn_suffix)
+                            resp = self.put_data(
+                                self.URL_USERS + "/{usr}".format(usr=usr_with_alt_upn),
+                                data_js={"key": param_name, "value": param_value},
+                            )
+                            cloud_answer = OcsXmlResponse(resp)
+                            if cloud_answer.statuscode == '100':
+                                return  # successful
+                            else:
+                                fail_reason = self._get_set_user_parameter_fail_status(cloud_answer.statuscode)
+
+                Ocs.logger.error(
+                    "An exception was caught in Ocs.set_user due to "
+                    + "negative server response code: {code} - {reason}".format(
+                        code=cloud_answer.statuscode,
+                        reason=fail_reason
+                    )
+                )
+                raise OperationFailure(
+                    "Ocs.set_user response: Error: {code} - {reason}".format(
+                        code=cloud_answer.statuscode,
+                        reason=fail_reason
+                    ),
+                    code=cloud_answer.statuscode
+                )
+        else:
+            raise WrongParam(
+                "Ocs.set_user_parameter wrong parameter name :{e}".format(
+                    e=param_name
+                )
+            )
+
 
     def set_user(
             self,
@@ -1783,6 +2012,111 @@ class Ocs(Base):
                     "Can't set parameter 'password': {e}".format(e=e.value)
                 )
 
+    def set_user_alt_upn(
+            self,
+            user_id,
+            email=None,
+            quota=None,
+            displayname=None,
+            phone=None,
+            address=None,
+            website=None,
+            twitter=None,
+            password=None,
+            fallback_upn_suffix=None,
+            **kvargs
+    ):
+        """Set/change information about the user.
+
+        Edits attributes related to a user. Users are able to edit email,
+        displayname and password; admins can also edit the quota value.
+        If user_id is not found replace UPN suffix by fallback_upn_suffix
+        and try again.
+
+        Args:
+            user_id (str): User ID (login).
+            email (str): email
+            quota (str): quota
+            displayname (str): display name
+            address (str): address
+            website (str): web site
+            twitter (str): twitter
+            password (str): new password
+            fallback_upn_suffix (str): Alternative UPN suffix.
+
+        Raises:
+            OperationFailure: The operation failed.
+            NotEnoughParams: No any parameters to change
+
+        Note:
+            kvargs used for arguments splatting from argparse
+        """
+        # server can change only one parameter by one request :(.
+        if email:
+            try:
+                self.set_user_parameter_alt_upn(user_id, "email", email, fallback_upn_suffix)
+            except OperationFailure as e:
+                Ocs.logger.error(
+                    "Can't set parameter 'email': {e}".format(e=e.value)
+                )
+
+        if quota:
+            try:
+                self.set_user_parameter_alt_upn(user_id, "quota", quota, fallback_upn_suffix)
+            except OperationFailure as e:
+                Ocs.logger.error(
+                    "Can't set parameter 'quota': {e}".format(e=e.value)
+                )
+
+        if displayname:
+            try:
+                self.set_user_parameter_alt_upn(user_id, "displayname", displayname, fallback_upn_suffix)
+            except OperationFailure as e:
+                Ocs.logger.error(
+                    "Can't set parameter 'displayname': {e}".format(e=e.value)
+                )
+
+        if phone:
+            try:
+                self.set_user_parameter_alt_upn(user_id, "phone", phone, fallback_upn_suffix)
+            except OperationFailure as e:
+                Ocs.logger.error(
+                    "Can't set parameter 'phone': {e}".format(e=e.value)
+                )
+
+        if address:
+            try:
+                self.set_user_parameter_alt_upn(user_id, "address", address, fallback_upn_suffix)
+            except OperationFailure as e:
+                Ocs.logger.error(
+                    "Can't set parameter 'address': {e}".format(e=e.value)
+                )
+
+        if website:
+            try:
+                self.set_user_parameter_alt_upn(user_id, "website", website, fallback_upn_suffix)
+            except OperationFailure as e:
+                Ocs.logger.error(
+                    "Can't set parameter 'website': {e}".format(e=e.value)
+                )
+
+        if twitter:
+            try:
+                self.set_user_parameter_alt_upn(user_id, "twitter", twitter, fallback_upn_suffix)
+            except OperationFailure as e:
+                Ocs.logger.error(
+                    "Can't set parameter 'twitter': {e}".format(e=e.value)
+                )
+
+        if password:
+            try:
+                self.set_user_parameter_alt_upn(user_id, "password", password, fallback_upn_suffix)
+            except OperationFailure as e:
+                Ocs.logger.error(
+                    "Can't set parameter 'password': {e}".format(e=e.value)
+                )
+
+
     def get_group_subadmins(self, group_id):
         """Subadmins.
 
@@ -1821,8 +2155,20 @@ class Ocs(Base):
                 "Ocs.get_group_subadmins response: Error: {code} - {reason}".format(
                     code=cloud_answer.statuscode,
                     reason=fail_reason
-                )
+                ),
+                code=cloud_answer.statuscode
             )
+
+    @staticmethod
+    def _get_set_group_subadmins_fail_status(statuscode):
+        if statuscode == '101':
+            return 'user does not exist'
+        elif statuscode == '102':
+            return 'group does not exist'
+        elif statuscode == '103':
+            return 'unknown failure'
+        else:
+            return 'unknown error'
 
     def set_group_subadmins(self, group_id, user_id):
         """Set user as subadmin of the group.
@@ -1843,14 +2189,8 @@ class Ocs(Base):
         cloud_answer = OcsXmlResponse(resp)
         if cloud_answer.statuscode == '100':
             return  # successful
-        elif cloud_answer.statuscode == '101':
-            fail_reason = 'user does not exist'
-        elif cloud_answer.statuscode == '102':
-            fail_reason = 'group does not exist'
-        elif cloud_answer.statuscode == '103':
-            fail_reason = 'unknown failure'
         else:
-            fail_reason = 'unknown error'
+            fail_reason = self._get_set_group_subadmins_fail_status(cloud_answer.statuscode)
 
             Ocs.logger.error(
                 "An exception was caught in Ocs.set_group_subadmins due to "
@@ -1863,8 +2203,76 @@ class Ocs(Base):
                 "Ocs.set_group_subadmins response: Error: {code} - {reason}".format(
                     code=cloud_answer.statuscode,
                     reason=fail_reason
+                ),
+                code=cloud_answer.statuscode
+            )
+
+    def set_group_subadmins_alt_upn(self, group_id, user_id, fallback_upn_suffix):
+        """Set user as subadmin of the group.
+
+        Sets the specified user as subadmin of the group.
+        If user_id is not found replace UPN suffix by fallback_upn_suffix
+        and try again.
+
+        Args:
+            group_id (str): Group ID (group name).
+            user_id (str): User ID (login).
+            fallback_upn_suffix (str): Alternative UPN suffix.
+
+        Raises:
+            OperationFailure: The operation failed.
+        """
+        resp = self.post_data(
+            self.URL_USERS + "/{user_id}/subadmins".format(user_id=user_id),
+            {"groupid": group_id},
+        )
+        cloud_answer = OcsXmlResponse(resp)
+        if cloud_answer.statuscode == '100':
+            return  # successful
+        else:
+            fail_reason = self._get_set_group_subadmins_fail_status(cloud_answer.statuscode)
+            if cloud_answer.statuscode == '101':
+                try:
+                    upn_suffix = user_id.principal_name.split('@')[1]
+                except IndexError:
+                    pass  # No any ways
+                else:
+                    if upn_suffix != fallback_upn_suffix:
+                        usr_with_alt_upn = user_id.principal_name.replace(upn_suffix, fallback_upn_suffix)
+                        resp = self.post_data(
+                            self.URL_USERS + "/{user_id}/subadmins".format(user_id=usr_with_alt_upn),
+                            {"groupid": group_id},
+                        )
+                        cloud_answer = OcsXmlResponse(resp)
+                        if cloud_answer.statuscode == '100':
+                            return  # successful
+                        else:
+                            fail_reason = self._get_set_group_subadmins_fail_status(cloud_answer.statuscode)
+            Ocs.logger.error(
+                "An exception was caught in Ocs.set_group_subadmins due to "
+                + "negative server response code: {code} - {reason}".format(
+                    code=cloud_answer.statuscode,
+                    reason=fail_reason
                 )
             )
+            raise OperationFailure(
+                "Ocs.set_group_subadmins response: Error: {code} - {reason}".format(
+                    code=cloud_answer.statuscode,
+                    reason=fail_reason
+                ),
+                code=cloud_answer.statuscode
+            )
+
+    @staticmethod
+    def _get_del_group_subadmins_fail_status(statuscode):
+        if statuscode == '101':
+            return 'user does not exist'
+        elif statuscode == '102':
+            return 'user is not a subadmin of the group / group does not exist'
+        elif statuscode == '103':
+            return 'unknown failure'
+        else:
+            return 'unknown error'
 
     def del_group_subadmins(self, group_id, user_id):
         """Revoke user as subadmin of the group.
@@ -1885,14 +2293,8 @@ class Ocs(Base):
         cloud_answer = OcsXmlResponse(resp)
         if cloud_answer.statuscode == '100':
             return  # successful
-        elif cloud_answer.statuscode == '101':
-            fail_reason = 'user does not exist'
-        elif cloud_answer.statuscode == '102':
-            fail_reason = 'user is not a subadmin of the group / group does not exist'
-        elif cloud_answer.statuscode == '103':
-            fail_reason = 'unknown failure'
         else:
-            fail_reason = 'unknown error'
+            fail_reason = self._get_del_group_subadmins_fail_status(cloud_answer.statuscode)
 
             Ocs.logger.error(
                 "An exception was caught in Ocs.del_group_subadmins due to "
@@ -1905,7 +2307,64 @@ class Ocs(Base):
                 "Ocs.del_group_subadmins response: Error: {code} - {reason}".format(
                     code=cloud_answer.statuscode,
                     reason=fail_reason
+                ),
+                code=cloud_answer.statuscode
+            )
+
+    def del_group_subadmins_alt_upn(self, group_id, user_id, fallback_upn_suffix):
+        """Revoke user as subadmin of the group.
+
+        Revoke user as subadmin of the group.
+        If user_id is not found replace UPN suffix by fallback_upn_suffix
+        and try again.
+
+        Args:
+            group_id (str): Group ID (group name).
+            user_id (str): User ID (login).
+            fallback_upn_suffix (str): Alternative UPN suffix.
+
+        Raises:
+            OperationFailure: The operation failed.
+        """
+        resp = self.delete_data(
+            self.URL_USERS + "/{user_id}/subadmins".format(user_id=user_id),
+            {"groupid": group_id},
+        )
+        cloud_answer = OcsXmlResponse(resp)
+        if cloud_answer.statuscode == '100':
+            return  # successful
+        else:
+            fail_reason = self._get_del_group_subadmins_fail_status(cloud_answer.statuscode)
+            if cloud_answer.statuscode == '101':
+                try:
+                    upn_suffix = user_id.principal_name.split('@')[1]
+                except IndexError:
+                    pass  # No any ways
+                else:
+                    if upn_suffix != fallback_upn_suffix:
+                        usr_with_alt_upn = user_id.principal_name.replace(upn_suffix, fallback_upn_suffix)
+                        resp = self.delete_data(
+                            self.URL_USERS + "/{user_id}/subadmins".format(user_id=usr_with_alt_upn),
+                            {"groupid": group_id},
+                        )
+                        cloud_answer = OcsXmlResponse(resp)
+                        if cloud_answer.statuscode == '100':
+                            return  # successful
+                        else:
+                            fail_reason = self._get_del_group_subadmins_fail_status(cloud_answer.statuscode)
+            Ocs.logger.error(
+                "An exception was caught in Ocs.del_group_subadmins due to "
+                + "negative server response code: {code} - {reason}".format(
+                    code=cloud_answer.statuscode,
+                    reason=fail_reason
                 )
+            )
+            raise OperationFailure(
+                "Ocs.del_group_subadmins response: Error: {code} - {reason}".format(
+                    code=cloud_answer.statuscode,
+                    reason=fail_reason
+                ),
+                code=cloud_answer.statuscode
             )
 
     def remove_group(self, group_id):
@@ -1944,7 +2403,8 @@ class Ocs(Base):
                 "Ocs.remove_group response: Error: {code} - {reason}".format(
                     code=cloud_answer.statuscode,
                     reason=fail_reason
-                )
+                ),
+                code=cloud_answer.statuscode
             )
 
     def remove_user(self, userid):
@@ -1980,7 +2440,8 @@ class Ocs(Base):
                 "Ocs.remove_user response: Error: {code} - {reason}".format(
                     code=cloud_answer.statuscode,
                     reason=fail_reason
-                )
+                ),
+                code=cloud_answer.statuscode
             )
 
     def disable_user(self, userid):
@@ -2012,7 +2473,8 @@ class Ocs(Base):
             )
         )
         raise OperationFailure(
-            "Ocs.disable_user error: {code} - {reason}".format(code=cloud_answer.statuscode, reason=fail_reason)
+            "Ocs.disable_user error: {code} - {reason}".format(code=cloud_answer.statuscode, reason=fail_reason),
+            code=cloud_answer.statuscode
         )
 
     def enable_user(self, userid):
@@ -2044,7 +2506,8 @@ class Ocs(Base):
             )
         )
         raise OperationFailure(
-            "Ocs.enable_user error: {code} - {reason}".format(code=cloud_answer.statuscode, reason=fail_reason)
+            "Ocs.enable_user error: {code} - {reason}".format(code=cloud_answer.statuscode, reason=fail_reason),
+            code=cloud_answer.statuscode
         )
 
     def enable_app(self, appid):
@@ -2074,7 +2537,8 @@ class Ocs(Base):
             )
         )
         raise OperationFailure(
-            "Ocs.enable_app error: {code} - {reason}".format(code=cloud_answer.statuscode, reason=fail_reason)
+            "Ocs.enable_app error: {code} - {reason}".format(code=cloud_answer.statuscode, reason=fail_reason),
+            code=cloud_answer.statuscode
         )
 
     def disable_app(self, appid):
@@ -2104,5 +2568,6 @@ class Ocs(Base):
             )
         )
         raise OperationFailure(
-            "Ocs.disable_app error: {code} - {reason}".format(code=cloud_answer.statuscode, reason=fail_reason)
+            "Ocs.disable_app error: {code} - {reason}".format(code=cloud_answer.statuscode, reason=fail_reason),
+            code=cloud_answer.statuscode
         )

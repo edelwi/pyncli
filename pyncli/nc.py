@@ -266,7 +266,13 @@ def new_groupfolder(args):
 
     if ldap_ok:
         for usr in user_obj_list:
-            cloud.add_user_to_group(usr.principal_name, ncgroup.group_id)
+            try:
+                cloud.add_user_to_group_alt_upn(
+                    user_id=usr.principal_name,
+                    group_id=ncgroup.group_id,
+                    fallback_upn_suffix=adm.ldap_domain_dot_notation_name)
+            except OperationFailure:
+                pass
     else:
         for usr in user_list:
             if "fullname" in usr:
@@ -277,7 +283,10 @@ def new_groupfolder(args):
                 )
             elif "login" in usr:
                 # TODO: may be check is the login with suffix
-                cloud.add_user_to_group(usr["login"], ncgroup.group_id)
+                try:
+                    cloud.add_user_to_group(usr["login"], ncgroup.group_id)
+                except OperationFailure:
+                    pass
     if ldap_ok:
         ldap_grp = group.group(
             "{lpr}{gr}{lsu}".format(lpr=LPR, lsu=LSU, gr=share_name),
@@ -408,7 +417,13 @@ def new_group(args):
 
     if ldap_ok:
         for usr in user_obj_list:
-            cloud.add_user_to_group(usr.principal_name, ncgroup.group_id)
+            try:
+                cloud.add_user_to_group_alt_upn(
+                    user_id=usr.principal_name,
+                    group_id=ncgroup.group_id,
+                    fallback_upn_suffix=adm.ldap_domain_dot_notation_name)
+            except OperationFailure:
+                pass
     else:
         for usr in user_list:
             if "fullname" in usr:
@@ -419,7 +434,10 @@ def new_group(args):
                 )
             elif "login" in usr:
                 # TODO: may by check is the login with suffix
-                cloud.add_user_to_group(usr["login"], ncgroup.group_id)
+                try:
+                    cloud.add_user_to_group(usr["login"], ncgroup.group_id)
+                except OperationFailure:
+                    pass
     if ldap_ok:
         ldap_grp = group.group(
             "{lpr}{gr}{lsu}".format(lpr=LPR, lsu=LSU, gr=group_name),
@@ -552,8 +570,10 @@ def del_group_member(args):
                 )
             )
         try:
-            cloud_group = cloud.remove_user_from_group(
-                user_id=user_obj_list[0].principal_name, group_id=group_name
+            cloud.remove_user_from_group_alt_upn(
+                user_id=user_obj_list[0].principal_name,
+                group_id=group_name,
+                fallback_upn_suffix=adm.ldap_domain_dot_notation_name
             )
         except OperationFailure:
             return
@@ -564,7 +584,7 @@ def del_group_member(args):
         return
     elif login and not ldap_ok:
         try:
-            cloud_group = cloud.remove_user_from_group(
+            cloud.remove_user_from_group(
                 user_id=login, group_id=group_name
             )
         except OperationFailure:
@@ -591,8 +611,10 @@ def del_group_member(args):
             )
             return
         try:
-            cloud.remove_user_from_group(
-                user_id=user_obj_list[0].principal_name, group_id=group_name
+            cloud.remove_user_from_group_alt_upn(
+                user_id=user_obj_list[0].principal_name,
+                group_id=group_name,
+                fallback_upn_suffix=adm.ldap_domain_dot_notation_name
             )
         except OperationFailure:
             return
@@ -808,10 +830,28 @@ def del_group_subadmins(args):
     except (OperationFailure, WrongParam) as e:
         logger.error("Could not connect to the cloud: {e}".format(e=e.value))
         exit(1)
-    try:
-        cloud.del_group_subadmins(group_name, login)
-    except OperationFailure as e:
-        return
+    if "user_ldap" in cloud._apps and Config.LDAP_USER:
+        try:
+            adm = operate2.admin(
+                Config.LDAP_USER,
+                Config.LDAP_USER_PWD,
+                [Config.LDAP_HOST, Config.LDAP_ADD_SERVER],
+            )
+        except OperationFailure as e:
+            logger.exeption(
+                "Could not connect to the ldap backend: {e}. Directory operations will be skipped.".format(
+                    e=e.value
+                )
+            )
+            try:
+                cloud.del_group_subadmins_alt_upn(group_name, login, adm.ldap_domain_dot_notation_name)
+            except OperationFailure:
+                return
+    else:
+        try:
+            cloud.del_group_subadmins(group_name, login)
+        except OperationFailure:
+            return
 
 
 def del_user(args):
@@ -838,7 +878,7 @@ def del_user(args):
         exit(1)
     try:
         cloud.remove_user(login)
-    except OperationFailure as e:
+    except OperationFailure:
         return
 
 
@@ -958,19 +998,27 @@ def add_user(args):
                     u=login, r=", ".join(x.brief for x in u)
                 )
             )
+        try:
+            cloud.add_user_to_group_alt_upn(
+                user_id=user_obj_list[0].principal_name,
+                group_id=group_name,
+                fallback_upn_suffix=adm.ldap_domain_dot_notation_name
+            )
+        except OperationFailure:
+            return
 
-        cloud_group = cloud.add_user_to_group(
-            user_id=user_obj_list[0].principal_name, group_id=group_name
-        )
         ldap_grp = adm.get_group(
             "{lpr}{gr}{lsu}".format(lpr=LPR, lsu=LSU, gr=group_name), "group"
         )
         adm.add_users_to_groups(user_obj_list, [ldap_grp])
         return
     elif login and not ldap_ok:
-        cloud_group = cloud.add_user_to_group(
-            user_id=login, group_id=group_name
-        )
+        try:
+            cloud.add_user_to_group(
+                user_id=login, group_id=group_name
+            )
+        except OperationFailure:
+            pass
         return
     elif not login and fullname and ldap_ok:
         u = adm.search_users_p(
@@ -992,9 +1040,14 @@ def add_user(args):
                 )
             )
             return
-        cloud.add_user_to_group(
-            user_id=user_obj_list[0].principal_name, group_id=group_name
-        )
+        try:
+            cloud.add_user_to_group_alt_upn(
+                user_id=user_obj_list[0].principal_name,
+                group_id=group_name,
+                fallback_upn_suffix=adm.ldap_domain_dot_notation_name
+            )
+        except OperationFailure:
+            return
         ldap_grp = adm.get_group(
             "{lpr}{gr}{lsu}".format(lpr=LPR, lsu=LSU, gr=group_name), "group"
         )
@@ -1127,14 +1180,24 @@ def add_users(args):
             user_obj_list.append(usr)
     if ldap_ok:
         for usr in user_obj_list:
-            cloud.add_user_to_group(usr.principal_name, ncgroup.group_id)
+            try:
+                cloud.add_user_to_group_alt_upn(
+                    user_id=usr.principal_name,
+                    group_id=ncgroup.group_id,
+                    fallback_upn_suffix=adm.ldap_domain_dot_notation_name
+                )
+            except OperationFailure:
+                pass
         ldap_grp = adm.get_group(
             "{lpr}{gr}{lsu}".format(lpr=LPR, lsu=LSU, gr=group_name), "group"
         )
         adm.add_users_to_groups(user_obj_list, [ldap_grp])
     else:
         for usr in user_obj_list:
-            cloud.add_user_to_group(usr["login"], ncgroup.group_id)
+            try:
+                cloud.add_user_to_group(usr["login"], ncgroup.group_id)
+            except OperationFailure:
+                pass
 
 
 def get_apps(args):
@@ -1533,6 +1596,7 @@ def set_group_subadmins(args):
             "It does not look like it is {l} login.".format(l=args.login)
         )
         return
+
     try:
         cloud = ocs.Ocs(
             Config.CLOUD_USER, Config.CLOUD_USER_PWD, Config.CLOUD_BASE_URL
@@ -1540,10 +1604,29 @@ def set_group_subadmins(args):
     except (OperationFailure, WrongParam) as e:
         logger.error("Could not connect to the cloud: {e}".format(e=e.value))
         exit(1)
-    try:
-        cloud.set_group_subadmins(group_name, login)
-    except OperationFailure as e:
-        return
+
+    if "user_ldap" in cloud._apps and Config.LDAP_USER:
+        try:
+            adm = operate2.admin(
+                Config.LDAP_USER,
+                Config.LDAP_USER_PWD,
+                [Config.LDAP_HOST, Config.LDAP_ADD_SERVER],
+            )
+        except OperationFailure as e:
+            logger.exeption(
+                "Could not connect to the ldap backend: {e}. Directory operations will be skipped.".format(
+                    e=e.value
+                )
+            )
+        try:
+            cloud.set_group_subadmins_alt_upn(group_name, login, adm.ldap_domain_dot_notation_name)
+        except OperationFailure:
+            return
+    else:
+        try:
+            cloud.set_group_subadmins(group_name, login)
+        except OperationFailure:
+            return
 
 
 def set_user(args):
@@ -1567,10 +1650,35 @@ def set_user(args):
     except (OperationFailure, WrongParam) as e:
         logger.error("Could not connect to the cloud: {e}".format(e=e.value))
         exit(1)
-    try:
-        cloud.set_user(user_id=login, **vars(args))
-    except (OperationFailure, WrongParam):
-        pass
+    if "user_ldap" in cloud._apps and Config.LDAP_USER:
+        try:
+            adm = operate2.admin(
+                Config.LDAP_USER,
+                Config.LDAP_USER_PWD,
+                [Config.LDAP_HOST, Config.LDAP_ADD_SERVER],
+            )
+        except OperationFailure as e:
+            logger.exeption(
+                "Could not connect to the ldap backend: {e}. Directory operations will be skipped.".format(
+                    e=e.value
+                )
+            )
+        try:
+            cloud.set_user_alt_upn(
+                user_id=login,
+                fallback_upn_suffix=adm.ldap_domain_dot_notation_name,
+                **vars(args)
+            )
+        except (OperationFailure, WrongParam):
+            pass
+    else:
+        try:
+            cloud.set_user(
+                user_id=login,
+                **vars(args)
+            )
+        except (OperationFailure, WrongParam):
+            pass
 
 
 def set_user_enable(args):

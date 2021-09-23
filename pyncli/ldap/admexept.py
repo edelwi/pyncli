@@ -19,7 +19,7 @@ class AdminException(Exception):
 
     """
 
-    def __init__(self, value):
+    def __init__(self, value, code=None ):
         self.value = value
 
     def __str__(self):

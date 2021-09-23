@@ -120,7 +120,7 @@
 
 <h3 id="pyncli.ldap.admexept.AdminException">AdminException</h3>
 
-<pre><code class="python">AdminException(self, value)
+<pre><code class="python">AdminException(self, value, code=None)
 </code></pre>
 
 <p>Root package exception class.</p>
@@ -128,7 +128,7 @@
     value (str): Description of the exception.</p>
 <h3 id="pyncli.ldap.admexept.NotEnoughParams">NotEnoughParams</h3>
 
-<pre><code class="python">NotEnoughParams(self, value)
+<pre><code class="python">NotEnoughParams(self, value, code=None)
 </code></pre>
 
 <p>Exception class called in case of lack of necessary parameters in the
@@ -137,7 +137,7 @@ constructor or method call.</p>
     value (str): Description of the exception.</p>
 <h3 id="pyncli.ldap.admexept.EmptyParam">EmptyParam</h3>
 
-<pre><code class="python">EmptyParam(self, value)
+<pre><code class="python">EmptyParam(self, value, code=None)
 </code></pre>
 
 <p>Exception class called when a method is called with an empty parameter.</p>
@@ -145,7 +145,7 @@ constructor or method call.</p>
     value (str): Description of the exception.</p>
 <h3 id="pyncli.ldap.admexept.WrongParam">WrongParam</h3>
 
-<pre><code class="python">WrongParam(self, value)
+<pre><code class="python">WrongParam(self, value, code=None)
 </code></pre>
 
 <p>The exception class that is called when the method is called as a
@@ -154,7 +154,7 @@ parameter of an invalid type or value.</p>
     value (str): Description of the exception.</p>
 <h3 id="pyncli.ldap.admexept.TooLong">TooLong</h3>
 
-<pre><code class="python">TooLong(self, value)
+<pre><code class="python">TooLong(self, value, code=None)
 </code></pre>
 
 <p>Exception class called when the method is called with an invalid length
@@ -163,7 +163,7 @@ parameter.</p>
     value (str): Description of the exception.</p>
 <h3 id="pyncli.ldap.admexept.ConnectionFailure">ConnectionFailure</h3>
 
-<pre><code class="python">ConnectionFailure(self, value)
+<pre><code class="python">ConnectionFailure(self, value, code=None)
 </code></pre>
 
 <p>Exception class called when it is impossible to connect to the specified
@@ -172,7 +172,7 @@ server.</p>
     value (str): Description of the exception.</p>
 <h3 id="pyncli.ldap.admexept.OperationFailure">OperationFailure</h3>
 
-<pre><code class="python">OperationFailure(self, value)
+<pre><code class="python">OperationFailure(self, value, code=None)
 </code></pre>
 
 <p>Exception class called when it is impossible to perform the specified
@@ -181,7 +181,7 @@ operation.</p>
     value (str): Description of the exception.</p>
 <h3 id="pyncli.ldap.admexept.NotFound">NotFound</h3>
 
-<pre><code class="python">NotFound(self, value)
+<pre><code class="python">NotFound(self, value, code=None)
 </code></pre>
 
 <p>Exception class called in case of problems with the search.</p>

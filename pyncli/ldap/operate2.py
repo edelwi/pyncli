@@ -164,6 +164,7 @@ class admin(object):
         if d_name == "":
             print("Uuuppsss, domain name not found!")
         self.ldap_domain_name = d_name
+        self.ldap_domain_dot_notation_name = d_name.lower().replace('dc=', '').replace(',', '.')
 
     def create_user(self, user_instance, new_password):
         """ Creates a user in ldap.

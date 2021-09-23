@@ -7,7 +7,7 @@
 <h3 id="pyncli.ldap.admexept.AdminException">AdminException</h3>
 
 ```python
-AdminException(self, value)
+AdminException(self, value, code=None)
 ```
 Root package exception class.
 
@@ -18,7 +18,7 @@ Args:
 <h3 id="pyncli.ldap.admexept.NotEnoughParams">NotEnoughParams</h3>
 
 ```python
-NotEnoughParams(self, value)
+NotEnoughParams(self, value, code=None)
 ```
 Exception class called in case of lack of necessary parameters in the
 constructor or method call.
@@ -30,7 +30,7 @@ Args:
 <h3 id="pyncli.ldap.admexept.EmptyParam">EmptyParam</h3>
 
 ```python
-EmptyParam(self, value)
+EmptyParam(self, value, code=None)
 ```
 Exception class called when a method is called with an empty parameter.
 
@@ -41,7 +41,7 @@ Args:
 <h3 id="pyncli.ldap.admexept.WrongParam">WrongParam</h3>
 
 ```python
-WrongParam(self, value)
+WrongParam(self, value, code=None)
 ```
 The exception class that is called when the method is called as a
 parameter of an invalid type or value.
@@ -53,7 +53,7 @@ Args:
 <h3 id="pyncli.ldap.admexept.TooLong">TooLong</h3>
 
 ```python
-TooLong(self, value)
+TooLong(self, value, code=None)
 ```
 Exception class called when the method is called with an invalid length
 parameter.
@@ -65,7 +65,7 @@ Args:
 <h3 id="pyncli.ldap.admexept.ConnectionFailure">ConnectionFailure</h3>
 
 ```python
-ConnectionFailure(self, value)
+ConnectionFailure(self, value, code=None)
 ```
 Exception class called when it is impossible to connect to the specified
 server.
@@ -77,7 +77,7 @@ Args:
 <h3 id="pyncli.ldap.admexept.OperationFailure">OperationFailure</h3>
 
 ```python
-OperationFailure(self, value)
+OperationFailure(self, value, code=None)
 ```
 Exception class called when it is impossible to perform the specified
 operation.
@@ -89,7 +89,7 @@ Args:
 <h3 id="pyncli.ldap.admexept.NotFound">NotFound</h3>
 
 ```python
-NotFound(self, value)
+NotFound(self, value, code=None)
 ```
 Exception class called in case of problems with the search.
 
