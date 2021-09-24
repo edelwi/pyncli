@@ -998,6 +998,8 @@ def add_user(args):
                     u=login, r=", ".join(x.brief for x in u)
                 )
             )
+        logger.debug(f"Trying to add user: {user_obj_list[0].principal_name} to the group {group_name} with "
+                     f"fallback UPN suffix: {adm.ldap_domain_dot_notation_name}")
         try:
             cloud.add_user_to_group_alt_upn(
                 user_id=user_obj_list[0].principal_name,
@@ -2464,10 +2466,13 @@ list of commands menu:
     try:
         args.func(args)
     except AttributeError as e:  # closed bug: https://github.com/datalad/datalad/issues/848
+        print(f'Fail {e}')
         logger
         args = parser.parse_args([args.top, "-h"])
         args.func(args)
     except OperationFailure as e:
+        print('Fail2')
+        logger.debug(f"{e}")
         pass  # if fail in .set_defaults(func=...)
 
 

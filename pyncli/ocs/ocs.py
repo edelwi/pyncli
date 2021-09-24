@@ -432,9 +432,9 @@ class OcsXmlResponse(object):
             )
         try:
             self.respose = ET.fromstring(xml_text)
-        except ParseError as e:
+        except Exception as e:
             raise WrongParam(
-                "Invalid xml_text parameter value. XML Parse Error."
+                f"Invalid xml_text parameter value. XML Parse Error {e}."
             )
         self.status = (
             self.respose.find(".//meta/status").text
@@ -480,6 +480,8 @@ class OcsXmlResponse(object):
             return OcsXmlResponse._parse_subadmins
         elif data_class_name == "AppInfo":
             return OcsXmlResponse._parse_app_info
+        else:
+            return None
 
     @staticmethod
     def _parse_group_folder(et_object):
@@ -1373,29 +1375,37 @@ class Ocs(Base):
         Raises:
             OperationFailure: The operation failed.
         """
+        Ocs.logger.debug(f"[add_user_to_group_alt_upn]: run.")
         resp = self.post_data(
             self.URL_USERS + "/{user_id}/groups".format(user_id=user_id),
             {"groupid": group_id},
         )
-        cloud_answer = OcsXmlResponse(resp)
+        try:
+            cloud_answer = OcsXmlResponse(resp)
+        except WrongParam as e:
+            Ocs.logger.exception(f"[add_user_to_group_alt_upn]: cannot parce response {resp} - {e}.")
+        #Ocs.logger.debug(f"[add_user_to_group_alt_upn]: request status {cloud_answer.statuscode}.")
         if cloud_answer.statuscode == '100':
             return  # successful
         else:
             fail_reason = self._get_add_user_fail_status(cloud_answer.statuscode)
 
         if cloud_answer.statuscode == '103':
+            #Ocs.logger.debug(f"[add_user_to_group_alt_upn]: received status 103")
             try:
-                upn_suffix = user_id.principal_name.split('@')[1]
+                upn_suffix = user_id.split('@')[1]
             except IndexError:
+                Ocs.logger.debug(f"[add_user_to_group_alt_upn]: UPN does not contains domain suffix.")
                 pass  # No any ways
             else:
                 if upn_suffix != fallback_upn_suffix:
-                    usr_with_alt_upn = user_id.principal_name.replace(upn_suffix, fallback_upn_suffix)
+                    usr_with_alt_upn = user_id.replace(upn_suffix, fallback_upn_suffix)
                     resp = self.post_data(
                         self.URL_USERS + "/{user_id}/groups".format(user_id=usr_with_alt_upn),
                         {"groupid": group_id},
                     )
                     cloud_answer = OcsXmlResponse(resp)
+                    Ocs.logger.debug(f"[add_user_to_group_alt_upn]: fallback request received {cloud_answer}")
                     if cloud_answer.statuscode == '100':
                         return  # successful
                     else:
@@ -1511,12 +1521,12 @@ class Ocs(Base):
 
         if cloud_answer.statuscode == '103':
             try:
-                upn_suffix = user_id.principal_name.split('@')[1]
+                upn_suffix = user_id.split('@')[1]
             except IndexError:
                 pass  # No any ways
             else:
                 if upn_suffix != fallback_upn_suffix:
-                    usr_with_alt_upn = user_id.principal_name.replace(upn_suffix, fallback_upn_suffix)
+                    usr_with_alt_upn = user_id.replace(upn_suffix, fallback_upn_suffix)
                     resp = self.delete_data(
                         self.URL_USERS + "/{user_id}/groups".format(user_id=usr_with_alt_upn),
                         {"groupid": group_id},
@@ -1872,14 +1882,14 @@ class Ocs(Base):
             else:
                 fail_reason = self._get_set_user_parameter_fail_status(cloud_answer.statuscode)
 
-                if cloud_answer.statuscode == '101':
+                if cloud_answer.statuscode == '101' or cloud_answer.statuscode == '997':
                     try:
-                        upn_suffix = user_id.principal_name.split('@')[1]
+                        upn_suffix = user_id.split('@')[1]
                     except IndexError:
                         pass  # No any ways
                     else:
                         if upn_suffix != fallback_upn_suffix:
-                            usr_with_alt_upn = user_id.principal_name.replace(upn_suffix, fallback_upn_suffix)
+                            usr_with_alt_upn = user_id.replace(upn_suffix, fallback_upn_suffix)
                             resp = self.put_data(
                                 self.URL_USERS + "/{usr}".format(usr=usr_with_alt_upn),
                                 data_js={"key": param_name, "value": param_value},
@@ -2233,12 +2243,12 @@ class Ocs(Base):
             fail_reason = self._get_set_group_subadmins_fail_status(cloud_answer.statuscode)
             if cloud_answer.statuscode == '101':
                 try:
-                    upn_suffix = user_id.principal_name.split('@')[1]
+                    upn_suffix = user_id.split('@')[1]
                 except IndexError:
                     pass  # No any ways
                 else:
                     if upn_suffix != fallback_upn_suffix:
-                        usr_with_alt_upn = user_id.principal_name.replace(upn_suffix, fallback_upn_suffix)
+                        usr_with_alt_upn = user_id.replace(upn_suffix, fallback_upn_suffix)
                         resp = self.post_data(
                             self.URL_USERS + "/{user_id}/subadmins".format(user_id=usr_with_alt_upn),
                             {"groupid": group_id},
@@ -2337,12 +2347,12 @@ class Ocs(Base):
             fail_reason = self._get_del_group_subadmins_fail_status(cloud_answer.statuscode)
             if cloud_answer.statuscode == '101':
                 try:
-                    upn_suffix = user_id.principal_name.split('@')[1]
+                    upn_suffix = user_id.split('@')[1]
                 except IndexError:
                     pass  # No any ways
                 else:
                     if upn_suffix != fallback_upn_suffix:
-                        usr_with_alt_upn = user_id.principal_name.replace(upn_suffix, fallback_upn_suffix)
+                        usr_with_alt_upn = user_id.replace(upn_suffix, fallback_upn_suffix)
                         resp = self.delete_data(
                             self.URL_USERS + "/{user_id}/subadmins".format(user_id=usr_with_alt_upn),
                             {"groupid": group_id},
